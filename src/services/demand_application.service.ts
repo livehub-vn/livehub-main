@@ -1,5 +1,5 @@
-import { supabase } from '../supabase/client';
-import { IDemandApplication, IDemandApplicationInput } from './demand.service';
+import { supabase } from "../supabase/client";
+import { IDemandApplicationInput } from './demand.service';
 
 /**
  * Lấy danh sách ứng tuyển theo ID nhu cầu

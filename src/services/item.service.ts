@@ -174,7 +174,7 @@ export const uploadServiceImages = async (serviceId: string, files: FileList) =>
       const fileExt = file.name.split('.').pop();
       const fileName = `${serviceId}-${Date.now()}-${i}.${fileExt}`;
       
-      const { data, error } = await supabase.storage
+      const { error } = await supabase.storage
         .from('service-images')
         .upload(fileName, file);
       
@@ -197,5 +197,27 @@ export const uploadServiceImages = async (serviceId: string, files: FileList) =>
   } catch (error) {
     console.error(`Error uploading images for service with ID ${serviceId}:`, error);
     return [];
+  }
+};
+
+export const deleteItemImage = async (itemId: string, imageUrl: string) => {
+  try {
+    // Extract file path from URL
+    const urlParts = imageUrl.split('/');
+    const filePath = urlParts[urlParts.length - 1];
+
+    const { error } = await supabase.storage
+      .from('public')
+      .remove([`items/${itemId}/${filePath}`]);
+
+    if (error) {
+      console.error('Error deleting image:', error);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error('Error in deleteItemImage:', error);
+    return false;
   }
 };  

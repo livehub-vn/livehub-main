@@ -3,8 +3,6 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getDemandById } from '../services/demand.service';
 import Dropzone from '../components/Dropzone';
-import RichtextEditor from '../components/RichtextEditorComponent';
-import { AccountMetadata, AccountRole } from '../types/Account';
 
 // Interface cho đơn ứng tuyển
 interface IApplicationInput {
@@ -31,13 +29,6 @@ const submitApplication = async (application: IApplicationInput) => {
   };
 };
 
-interface DemandApplyFormData {
-  fullName: string;
-  phone: string;
-  email: string;
-  introduction: string;
-  notes: string;
-}
 
 const DemandApply: React.FC = () => {
   const { id } = useParams<{ id: string }>();
@@ -53,13 +44,6 @@ const DemandApply: React.FC = () => {
   const [note, setNote] = useState('');
   const [contactInfo, setContactInfo] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>([]);
-  const [formData, setFormData] = useState<DemandApplyFormData>({
-    fullName: '',
-    phone: '',
-    email: '',
-    introduction: '',
-    notes: ''
-  });
 
   useEffect(() => {
     const checkAuth = async () => {

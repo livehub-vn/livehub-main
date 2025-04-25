@@ -96,48 +96,37 @@ const ServiceApply = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!id || !user || !service) return;
+    
+    if (!user) {
+      setError('Vui lòng đăng nhập để thuê dịch vụ');
+      return;
+    }
 
     try {
       setSubmitting(true);
-      setError('');
-
-      // Validate form
-      if (!formData.selected_time_slots.start || !formData.selected_time_slots.end) {
-        setError('Vui lòng chọn thời gian thuê');
-        return;
-      }
-
-      if (!formData.expect_price_range.min || !formData.expect_price_range.max) {
-        setError('Vui lòng nhập khoảng giá mong muốn');
-        return;
-      }
-
-      console.log('Submitting rental:', {
-        service_id: id,
-        buyer_id: user.id,
-        selected_time_slots: formData.selected_time_slots,
-        expect_price_range: formData.expect_price_range,
-        note: formData.note
-      });
-
       const result = await createServiceRental({
-        service_id: id,
+        service_id: id || '',
         buyer_id: user.id,
         status: 'pending',
         selected_time_slots: formData.selected_time_slots,
         expect_price_range: formData.expect_price_range,
-        note: formData.note
+        note: formData.note,
+        contact_info: {
+          name: typeof user.metadata?.fullName === 'string' ? user.metadata.fullName : '',
+          email: user.email || '',
+          phone: '',
+          address: ''
+        }
       });
 
-      console.log('Rental submitted successfully:', result);
-
-      navigate(`/services/${id}`, { 
-        state: { message: 'Đăng ký thuê dịch vụ thành công! Chúng tôi sẽ liên hệ với bạn sớm.' }
-      });
-    } catch (err: any) {
-      console.error('Error submitting rental:', err);
-      setError(err.message || 'Đã có lỗi xảy ra khi đăng ký. Vui lòng thử lại sau.');
+      if (result?.id) {
+        navigate(`/service-rentals/${result.id}`);
+      } else {
+        setError('Không thể đăng ký thuê dịch vụ. Vui lòng thử lại sau.');
+      }
+    } catch (err) {
+      console.error('Error applying for service:', err);
+      setError('Đã xảy ra lỗi khi đăng ký thuê dịch vụ');
     } finally {
       setSubmitting(false);
     }
