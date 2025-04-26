@@ -17,6 +17,7 @@ const DemandDetail: React.FC = () => {
   const [error, setError] = useState('');
   const [changingStatus, setChangingStatus] = useState(false);
   const [applicantsCount, setApplicantsCount] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (!id) {
@@ -115,8 +116,53 @@ const DemandDetail: React.FC = () => {
     );
   }
 
+  if (demand && demand.status !== 'approved') {
+    return (
+      <div className="flex justify-center items-center min-h-screen bg-gray-50">
+        <div className="text-center p-6 bg-white rounded-lg shadow-md max-w-md">
+          <svg className="mx-auto h-12 w-12 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">Nhu cầu chưa được duyệt</h3>
+          <p className="mt-2 text-gray-600">Nhu cầu này chưa được duyệt hoặc đã bị ẩn khỏi hệ thống.</p>
+          <div className="mt-6">
+            <button
+              onClick={() => navigate('/demands')}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              Quay lại danh sách nhu cầu
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-8 pt-16">
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={() => navigate('/demands')}
+          className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        >
+          ← Quay lại danh sách nhu cầu
+        </button>
+      </div>
+      {/* Modal cảnh báo cho buyer */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center transform scale-100 opacity-100">
+            <h2 className="text-xl font-bold text-orange-600 mb-4">Không thể ứng tuyển</h2>
+            <p className="text-gray-700 mb-6">Bạn là <span className="font-semibold">buyer</span> nên không thể ứng tuyển vào nhu cầu này.</p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-6 py-2 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           {/* Header */}
@@ -310,14 +356,14 @@ const DemandDetail: React.FC = () => {
                 </div>
               </div>
 
-              {isAuthenticated && !isOwner && demand.status === 'open' && (
+              {isAuthenticated && user?.metadata.role === 'SUPPLIER' && demand.status === 'approved' && (
                 <div className="mt-6">
-                  <Link
-                    to={`/demands/${id}/apply`}
-                    className="w-full flex justify-center items-center px-4 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                  <button
+                    className="w-full px-6 py-3 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+                    onClick={() => navigate(`/demands/${id}/apply`)}
                   >
-                    Ứng tuyển
-                  </Link>
+                    Ứng tuyển vào nhu cầu này
+                  </button>
                 </div>
               )}
             </div>

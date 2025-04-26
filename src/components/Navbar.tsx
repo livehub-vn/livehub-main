@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import Logo from '../assets/Logo.png';
 import { useAuthStore } from '../stores/authStore';
@@ -8,6 +8,8 @@ const Navbar = () => {
   const navigate = useNavigate();
   const { user, isAuthenticated, logout, checkAuth } = useAuthStore();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [isServiceMenuOpen, setIsServiceMenuOpen] = useState(false);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
   
   useEffect(() => {
     checkAuth();
@@ -16,6 +18,23 @@ const Navbar = () => {
   const handleLogout = async () => {
     await logout();
     navigate('/');
+  };
+
+  const handleServiceMenuClick = () => {
+    navigate('/services');
+  };
+
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setIsServiceMenuOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setIsServiceMenuOpen(false);
+    }, 100); // Delay 300ms trước khi đóng menu
   };
   
   return (
@@ -41,43 +60,58 @@ const Navbar = () => {
                 Trang chủ
               </Link>
               
-              {isAuthenticated && (
-                <>
-                  <Link
-                    to="/services"
-                    className="text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium"
+              <div className="relative">
+                <button
+                  onClick={handleServiceMenuClick}
+                  onMouseEnter={handleMouseEnter}
+                  onMouseLeave={handleMouseLeave}
+                  className="text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium flex items-center"
+                >
+                  Thông tin dịch vụ
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                  </svg>
+                </button>
+                
+                {isServiceMenuOpen && (
+                  <div 
+                    className="absolute left-0 mt-2 w-48 bg-white rounded-md shadow-lg py-1"
+                    onMouseEnter={handleMouseEnter}
+                    onMouseLeave={handleMouseLeave}
                   >
-                    Dịch Vụ
-                  </Link>
-                  
-                  {user?.metadata.role === AccountRole.SUPPLIER && (
                     <Link
-                      to="/demands"
-                      className="text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium"
+                      to="/services"
+                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                     >
-                      Nhu Cầu
+                      Dịch vụ
                     </Link>
-                  )}
-                  
-                  {user?.metadata.role === AccountRole.BUYER && (
-                    <Link
-                      to="/demands/new"
-                      className="text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium"
-                    >
-                      Đăng nhu cầu
-                    </Link>
-                  )}
-
-                  {user?.metadata.role === AccountRole.SUPPLIER && (
-                    <Link
-                      to="/services/create"
-                      className="text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium"
-                    >
-                      Đăng dịch vụ
-                    </Link>
-                  )}
-                </>
-              )}
+                    {isAuthenticated && user?.metadata.role === AccountRole.BUYER && (
+                      <Link
+                        to="/demands/new"
+                        className="block px-3 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                      >
+                        Đăng nhu cầu thuê dịch vụ
+                      </Link>
+                    )}
+                    {isAuthenticated && user?.metadata.role === AccountRole.SUPPLIER && (
+                      <>
+                        <Link
+                          to="/services/create"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Đăng dịch vụ
+                        </Link>
+                        <Link
+                          to="/demands"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Danh sách nhu cầu
+                        </Link>
+                      </>
+                    )}
+                  </div>
+                )}
+              </div>
               
               <Link
                 to="/contact"

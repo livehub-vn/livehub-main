@@ -28,6 +28,8 @@ const Services = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [isMyServices, setIsMyServices] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
   useEffect(() => {
     const fetchServices = async () => {
@@ -35,23 +37,19 @@ const Services = () => {
         setLoading(true);
         
         let servicesData = [];
-        // Kiểm tra xem người dùng có đang xem dịch vụ của họ không
         if (isAuthenticated && user?.id && isMyServices) {
-          // Lấy tất cả dịch vụ của người dùng hiện tại, bất kể trạng thái
           const result = await getMyServices(user.id, 1, 100);
           servicesData = result.data || [];
-          console.log('Dịch vụ của tôi:', servicesData);
         } else {
-          // Lấy các dịch vụ công khai đã được duyệt
           const result = await getServices(1, 100, { 
             status: 'approved',
             is_public: true 
           });
           servicesData = result.data || [];
-          console.log('Dịch vụ công khai:', servicesData);
         }
         
         setServices(servicesData);
+        setFilteredServices(servicesData);
       } catch (err) {
         console.error('Lỗi khi tải dịch vụ:', err);
         setError('Không thể tải dữ liệu. Vui lòng thử lại sau.');
@@ -63,7 +61,15 @@ const Services = () => {
     fetchServices();
   }, [isAuthenticated, user, isMyServices]);
 
-  // Hàm chuyển đổi giữa chế độ xem dịch vụ công khai và dịch vụ của tôi
+  useEffect(() => {
+    const filtered = services.filter(service => 
+      service.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      service.category?.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    setFilteredServices(filtered);
+  }, [searchQuery, services]);
+
   const toggleMyServices = () => {
     setIsMyServices(!isMyServices);
   };
@@ -116,6 +122,25 @@ const Services = () => {
           </p>
         </div>
 
+        {!isMyServices && (
+          <div className="mt-8 max-w-3xl mx-auto">
+            <div className="relative">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="Tìm kiếm dịch vụ..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-orange-500 focus:border-orange-500"
+              />
+              <div className="absolute inset-y-0 right-0 flex items-center pr-3">
+                <svg className="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
+              </div>
+            </div>
+          </div>
+        )}
+
         {isAuthenticated && (
           <div className="mt-8 flex justify-center gap-4">
             {user && (
@@ -139,7 +164,7 @@ const Services = () => {
         )}
 
         <div className="mt-12 grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
-          {services.map((service) => (
+          {filteredServices.map((service) => (
             <div key={service.id} className="flex flex-col rounded-lg shadow-lg overflow-hidden">
               <div className="flex-shrink-0">
                 <img 
@@ -191,7 +216,7 @@ const Services = () => {
                           to={`/services/${service.id}/apply`}
                           className="inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                         >
-                          Thuê
+                          Thuê dịch vụ
                         </Link>
                       )}
                     </div>
@@ -202,7 +227,7 @@ const Services = () => {
           ))}
         </div>
 
-        {services.length === 0 && (
+        {filteredServices.length === 0 && (
           <div className="mt-12 text-center text-gray-500">
             <p>Không tìm thấy dịch vụ nào.</p>
             {isMyServices ? (

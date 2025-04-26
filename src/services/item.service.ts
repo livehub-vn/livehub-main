@@ -198,7 +198,7 @@ export const uploadServiceImages = async (serviceId: string, files: FileList) =>
     console.error(`Error uploading images for service with ID ${serviceId}:`, error);
     return [];
   }
-};
+};  
 
 export const deleteItemImage = async (itemId: string, imageUrl: string) => {
   try {

@@ -10,7 +10,6 @@ import Contact from './pages/Contact';
 import ServiceDetail from './pages/ServiceDetail';
 import ServicePostEditor from './pages/ServicePostEditor';
 import ServiceApply from './pages/ServiceApply';
-import Demands from './pages/Demands';
 import DemandDetail from './pages/DemandDetail';
 import DemandPostEditor from './pages/DemandPostEditor';
 import DemandApply from './pages/DemandApply';
@@ -20,6 +19,8 @@ import ServiceRentalDetail from './pages/ServiceRentalDetail';
 import Profile from './pages/Profile';
 import ServiceReview from './pages/ServiceReview';
 import MyDemands from './pages/MyDemands';
+import ApprovedDemands from './pages/ApprovedDemands';
+import Demands from './pages/Demands';
 
 const App: React.FC = () => {
   return (
@@ -48,6 +49,7 @@ const App: React.FC = () => {
             <Route path="/demands/:id/edit" element={<DemandPostEditor />} />
             <Route path="/demands/:id/apply" element={<DemandApply />} />
             <Route path="/my-demands" element={<MyDemands />} />
+            <Route path="/demands/approved" element={<ApprovedDemands />} />
           </Routes>
         </main>
         <Footer />

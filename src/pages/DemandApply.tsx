@@ -38,6 +38,7 @@ const DemandApply: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [demand, setDemand] = useState<any>(null);
+  const [showModal, setShowModal] = useState(false);
   
   // Form state
   const [promoteText, setPromoteText] = useState('');
@@ -74,6 +75,12 @@ const DemandApply: React.FC = () => {
 
     checkAuth();
   }, [id, isAuthenticated, navigate, user]);
+
+  useEffect(() => {
+    if (user && user.metadata.role === 'BUYER') {
+      setShowModal(true);
+    }
+  }, [user]);
 
   const loadDemandData = async () => {
     if (!id) {
@@ -240,6 +247,23 @@ const DemandApply: React.FC = () => {
 
   if (!demand) {
     return null;
+  }
+
+  if (showModal) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm transition-colors duration-300">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center transform scale-100 opacity-100">
+          <h2 className="text-xl font-bold text-orange-600 mb-4">Không thể ứng tuyển</h2>
+          <p className="text-gray-700 mb-6">Bạn là <span className="font-semibold">buyer</span> nên không thể ứng tuyển vào nhu cầu này.</p>
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    );
   }
 
   return (

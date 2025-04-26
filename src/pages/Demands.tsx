@@ -16,10 +16,7 @@ const Demands: React.FC = () => {
   const limit = 10;
 
   // Các state cho bộ lọc
-  const [filter, setFilter] = useState<IDemandFilter>({
-    status: 'approved',  // Chỉ lấy nhu cầu đã được duyệt
-    is_public: true     // Chỉ lấy nhu cầu công khai
-  });
+  const [filter, setFilter] = useState<IDemandFilter>({ is_public: true, status: 'approved' });
   const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
@@ -29,8 +26,10 @@ const Demands: React.FC = () => {
   const loadDemands = async () => {
     try {
       setLoading(true);
-      // Thêm searchTerm vào filter khi có tìm kiếm
-      const filterWithSearch = searchTerm ? { ...filter, search: searchTerm } : filter;
+      let filterWithSearch: any = { is_public: true, status: 'approved' };
+      if (searchTerm) filterWithSearch.search = searchTerm;
+      if (filter.category) filterWithSearch.category = filter.category;
+      // Có thể mở rộng thêm các trường khác nếu cần
       console.log('Đang tải dữ liệu với filter:', filterWithSearch);
       
       const response = await getDemands(page, limit, filterWithSearch);
@@ -52,12 +51,6 @@ const Demands: React.FC = () => {
     }
   };
 
-  const handleFilterChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    console.log('Thay đổi filter:', name, value);
-    setFilter(prev => ({ ...prev, [name]: value }));
-    setPage(1);
-  };
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,17 +60,13 @@ const Demands: React.FC = () => {
   };
 
   const clearFilters = () => {
-    console.log('Xóa bộ lọc');
-    setFilter({ 
-      status: 'approved',
-      is_public: true 
-    });
+    setFilter({ is_public: true, status: 'approved' });
     setSearchTerm('');
     setPage(1);
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-12">
+    <div className="min-h-screen bg-gray-50 py-12 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
           <div>
@@ -88,7 +77,7 @@ const Demands: React.FC = () => {
           {isAuthenticated && (
             <Link
               to="/demands/new"
-              className="mt-4 md:mt-0 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="mt-4 md:mt-0 px-4 py-2 bg-[#FF9800] text-white rounded-md hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
             >
               Đăng nhu cầu mới
             </Link>
@@ -108,11 +97,11 @@ const Demands: React.FC = () => {
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     placeholder="Tìm kiếm theo tiêu đề, mô tả..."
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-400 focus:ring-gray-400 sm:text-sm"
                   />
                   <button
                     type="submit"
-                    className="absolute inset-y-0 right-0 flex items-center px-3 bg-blue-600 text-white rounded-r-md hover:bg-blue-700"
+                    className="absolute inset-y-0 right-0 flex items-center px-3 bg-[#FF9800] text-white rounded-r-md hover:bg-[#FFA726]"
                   >
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
@@ -121,39 +110,20 @@ const Demands: React.FC = () => {
                 </div>
               </div>
 
-              <div>
-                <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">Danh mục</label>
-                <select
-                  id="category"
-                  name="category"
-                  value={filter.category || ''}
-                  onChange={handleFilterChange}
-                  className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-                >
-                  <option value="">Tất cả danh mục</option>
-                  <option value="design">Thiết kế</option>
-                  <option value="development">Phát triển phần mềm</option>
-                  <option value="marketing">Marketing</option>
-                  <option value="writing">Viết & Dịch thuật</option>
-                  <option value="video">Video & Hoạt hình</option>
-                  <option value="audio">Âm thanh</option>
-                  <option value="business">Tư vấn kinh doanh</option>
-                  <option value="other">Khác</option>
-                </select>
-              </div>
+              
             </div>
 
             <div className="flex justify-end">
               <button
                 type="button"
                 onClick={clearFilters}
-                className="px-4 py-2 mr-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 mr-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
               >
                 Xóa bộ lọc
               </button>
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#FF9800] hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
               >
                 Áp dụng
               </button>
@@ -165,7 +135,7 @@ const Demands: React.FC = () => {
         {loading ? (
           <div className="flex justify-center items-center py-12">
             <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto"></div>
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gray-400 mx-auto"></div>
               <p className="mt-4 text-gray-600">Đang tải...</p>
             </div>
           </div>
@@ -179,7 +149,7 @@ const Demands: React.FC = () => {
               <p className="mt-2 text-gray-600">{error}</p>
               <button
                 onClick={() => loadDemands()}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-4 px-4 py-2 bg-[#FF9800] text-white rounded-md hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
               >
                 Thử lại
               </button>
@@ -195,7 +165,7 @@ const Demands: React.FC = () => {
               <p className="mt-2 text-gray-600">Không có nhu cầu nào phù hợp với tiêu chí tìm kiếm của bạn.</p>
               <button
                 onClick={clearFilters}
-                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="mt-4 px-4 py-2 bg-[#FF9800] text-white rounded-md hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
               >
                 Xóa bộ lọc
               </button>
@@ -214,7 +184,7 @@ const Demands: React.FC = () => {
                     <Link to={`/demands/${demand.id}`} className="block">
                       <div className="px-6 py-5">
                         <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-blue-600 truncate">{demand.title}</h3>
+                          <h3 className="text-lg font-medium text-[#FF9800] truncate">{demand.title}</h3>
                         </div>
                         
                         <div className="mt-2 text-sm text-gray-500 line-clamp-2">{demand.description}</div>

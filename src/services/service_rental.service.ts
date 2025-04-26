@@ -86,7 +86,7 @@ export const getServiceRentalsByServiceId = async (serviceId: string) => {
     return formattedData || [];
   } catch (error: unknown) {
     if (error instanceof Error) {
-      console.error('Lỗi khi lấy danh sách yêu cầu thuê:', error);
+    console.error('Lỗi khi lấy danh sách yêu cầu thuê:', error);
       throw new Error(`Không thể lấy danh sách thuê dịch vụ: ${error.message}`);
     }
     throw new Error('Đã xảy ra lỗi không xác định');
@@ -155,7 +155,7 @@ export const createServiceRental = async (data: IServiceRentalInput): Promise<IS
       .insert(data)
       .select()
       .single();
-
+    
     if (error) {
       throw new Error(`Không thể tạo yêu cầu thuê dịch vụ: ${error.message}`);
     }

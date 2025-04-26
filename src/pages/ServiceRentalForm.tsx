@@ -3,6 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getServiceById } from '../services/service.service';
 import { createServiceRental } from '../services/service_rental.service';
+import ReactMarkdown from 'react-markdown';
 
 interface TimeSlot {
   start: string;
@@ -28,6 +29,7 @@ interface IServiceRentalInput {
   };
   note?: string;
   contact_info: ContactInfo;
+  previous_service_experience?: string;
 }
 
 const ServiceRentalForm: React.FC = () => {
@@ -59,10 +61,12 @@ const ServiceRentalForm: React.FC = () => {
       phone: '',
       email: '',
       address: ''
-    }
+    },
+    previous_service_experience: ''
   });
+  const [supplierId, setSupplierId] = useState<string>('');
 
-  const [selectedDates, setSelectedDates] = useState<string[]>([]);
+  const [selectedDates] = useState<string[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -96,6 +100,7 @@ const ServiceRentalForm: React.FC = () => {
       }
 
       setService(serviceData);
+      setSupplierId(serviceData.owner_id || '');
       
       // Cập nhật form data với thông tin dịch vụ
       setFormData(prev => ({
@@ -117,23 +122,15 @@ const ServiceRentalForm: React.FC = () => {
     }
   };
 
-  const handleTimeSlotSelect = (date: string) => {
-    setSelectedDates(prev => {
-      const newDates = prev.includes(date) 
-        ? prev.filter(d => d !== date)
-        : [...prev, date];
-      
-      // Cập nhật time slots
-      setFormData(prevData => ({
-        ...prevData,
-        selected_time_slots: {
-          start: newDates[0] || '',
-          end: newDates[newDates.length - 1] || ''
-        }
-      }));
-      
-      return newDates;
-    });
+  const handleTimeSlotChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      selected_time_slots: {
+        ...prev.selected_time_slots,
+        [name]: value
+      }
+    }));
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement>) => {
@@ -156,6 +153,11 @@ const ServiceRentalForm: React.FC = () => {
           ...prev.expect_price_range,
           [field]: value
         }
+      }));
+    } else if (name === 'previous_service_experience') {
+      setFormData(prev => ({
+        ...prev,
+        previous_service_experience: value
       }));
     } else {
       setFormData(prev => ({
@@ -184,14 +186,16 @@ const ServiceRentalForm: React.FC = () => {
         return;
       }
 
-      const rentalData: IServiceRentalInput = {
+      const rentalData: any = {
         status: 'pending',
         service_id: formData.service_id,
+        supplier_id: supplierId,
         buyer_id: formData.buyer_id,
         selected_time_slots: formData.selected_time_slots,
-        expect_price_range: formData.expect_price_range,
+        days: selectedDates,
         note: formData.note,
-        contact_info: formData.contact_info
+        contact_info: formData.contact_info,
+        previous_service_experience: formData.previous_service_experience
       };
 
       // Tạo đơn thuê dịch vụ
@@ -201,13 +205,13 @@ const ServiceRentalForm: React.FC = () => {
         // Chuyển hướng đến trang chi tiết đơn thuê
         navigate(`/service-rentals/${result.id}`);
       } else {
-        setError('Không thể đăng ký thuê dịch vụ. Vui lòng thử lại sau.');
+        setError('Không thể thuê dịch vụ. Vui lòng thử lại sau.');
       }
 
       setSaving(false);
     } catch (err) {
       console.error('Error saving service rental:', err);
-      setError('Đã xảy ra lỗi khi đăng ký thuê dịch vụ. Vui lòng thử lại sau.');
+      setError('Đã xảy ra lỗi khi thuê dịch vụ. Vui lòng thử lại sau.');
       setSaving(false);
     }
   };
@@ -252,28 +256,30 @@ const ServiceRentalForm: React.FC = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <button
+          onClick={handleCancel}
+          className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+        >
+          ← Quay lại trang dịch vụ
+        </button>
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="p-6">
             <div className="flex items-center justify-between mb-6">
               <div className="flex items-center">
-                <button
-                  onClick={handleCancel}
-                  className="mr-2 text-gray-600 hover:text-gray-900"
-                >
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-                  </svg>
-                </button>
                 <h2 className="text-2xl font-bold text-gray-900">
-                  Đăng ký thuê dịch vụ
+                  Thuê dịch vụ
                 </h2>
               </div>
             </div>
 
             {service && (
               <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-                <h3 className="text-lg font-semibold mb-2">{service.title}</h3>
-                <p className="text-gray-600">{service.description}</p>
+                <h3 className="text-lg font-semibold mb-2">
+                  <ReactMarkdown>{service.title}</ReactMarkdown>
+                </h3>
+                <p className="text-gray-600">
+                  <ReactMarkdown>{service.description}</ReactMarkdown>
+                </p>
                 <div className="mt-2">
                   <span className="text-gray-700 font-medium">Giá tham khảo: </span>
                   <span className="text-blue-600">{service.price_range.min.toLocaleString()} - {service.price_range.max.toLocaleString()} {service.price_range.currency}</span>
@@ -282,12 +288,11 @@ const ServiceRentalForm: React.FC = () => {
             )}
 
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Thông tin người đăng ký */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Thông tin người đăng ký</h3>
+                <h3 className="text-lg font-semibold mb-4 text-orange-600">Thông tin người thuê</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="contact_info.name" className="block text-sm font-medium text-gray-700">Họ tên <span className="text-red-500">*</span></label>
+                    <label htmlFor="contact_info.name" className="block text-sm font-medium text-orange-700">Tên người thuê <span className="text-red-500">*</span></label>
                     <input
                       type="text"
                       id="contact_info.name"
@@ -295,11 +300,11 @@ const ServiceRentalForm: React.FC = () => {
                       required
                       value={formData.contact_info.name || ''}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
                   <div>
-                    <label htmlFor="contact_info.email" className="block text-sm font-medium text-gray-700">Email <span className="text-red-500">*</span></label>
+                    <label htmlFor="contact_info.email" className="block text-sm font-medium text-orange-700">Email <span className="text-red-500">*</span></label>
                     <input
                       type="email"
                       id="contact_info.email"
@@ -307,13 +312,13 @@ const ServiceRentalForm: React.FC = () => {
                       required
                       value={formData.contact_info.email || ''}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <div>
-                    <label htmlFor="contact_info.phone" className="block text-sm font-medium text-gray-700">Số điện thoại <span className="text-red-500">*</span></label>
+                    <label htmlFor="contact_info.phone" className="block text-sm font-medium text-orange-700">Số điện thoại <span className="text-red-500">*</span></label>
                     <input
                       type="tel"
                       id="contact_info.phone"
@@ -321,140 +326,87 @@ const ServiceRentalForm: React.FC = () => {
                       required
                       value={formData.contact_info.phone || ''}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
                   <div>
-                    <label htmlFor="contact_info.address" className="block text-sm font-medium text-gray-700">Địa chỉ</label>
+                    <label htmlFor="contact_info.address" className="block text-sm font-medium text-orange-700">Địa chỉ</label>
                     <input
                       type="text"
                       id="contact_info.address"
                       name="contact_info.address"
                       value={formData.contact_info.address || ''}
                       onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
                 </div>
               </div>
-
-              {/* Thời gian */}
               <div>
-                <h3 className="text-lg font-semibold mb-4">Chọn ngày thuê dịch vụ</h3>
-                <div className="grid grid-cols-7 gap-2">
-                  {service?.date_range?.days?.map((day: string) => {
-                    const isSelected = selectedDates.includes(day);
-                    let dayDisplay = "";
-                    switch(day) {
-                      case 'mon': dayDisplay = 'Thứ Hai'; break;
-                      case 'tue': dayDisplay = 'Thứ Ba'; break;
-                      case 'wed': dayDisplay = 'Thứ Tư'; break;
-                      case 'thu': dayDisplay = 'Thứ Năm'; break;
-                      case 'fri': dayDisplay = 'Thứ Sáu'; break;
-                      case 'sat': dayDisplay = 'Thứ Bảy'; break;
-                      case 'sun': dayDisplay = 'Chủ Nhật'; break;
-                    }
-                    return (
-                      <button
-                        key={day}
-                        type="button"
-                        onClick={() => {
-                          if (isSelected) {
-                            handleTimeSlotSelect(day);
-                          } else {
-                            handleTimeSlotSelect(day);
-                          }
-                        }}
-                        className={`p-2 rounded-md ${isSelected ? 'bg-blue-500 text-white' : 'bg-gray-100 text-gray-700'} hover:bg-blue-400 hover:text-white transition-colors`}
-                      >
-                        {dayDisplay}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="mt-2 text-sm text-gray-500">Nhấn vào các ngày bạn muốn thuê dịch vụ</p>
-                {selectedDates.length === 0 && (
-                  <p className="mt-1 text-sm text-red-500">Vui lòng chọn ít nhất một ngày</p>
-                )}
-              </div>
-
-              {/* Ngân sách dự kiến */}
-              <div>
-                <h3 className="text-lg font-semibold mb-4">Ngân sách dự kiến</h3>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <h3 className="text-lg font-semibold mb-4 text-orange-600">Thời gian thuê dịch vụ</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
-                    <label htmlFor="expect_price_range.min" className="block text-sm font-medium text-gray-700">Giá tối thiểu <span className="text-red-500">*</span></label>
+                    <label htmlFor="start" className="block text-sm font-medium text-orange-700">Bắt đầu <span className="text-red-500">*</span></label>
                     <input
-                      type="number"
-                      id="expect_price_range.min"
-                      name="expect_price_range.min"
+                      type="datetime-local"
+                      id="start"
+                      name="start"
+                      value={formData.selected_time_slots.start}
+                      onChange={handleTimeSlotChange}
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                       required
-                      value={formData.expect_price_range.min}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
                   </div>
-
                   <div>
-                    <label htmlFor="expect_price_range.max" className="block text-sm font-medium text-gray-700">Giá tối đa <span className="text-red-500">*</span></label>
+                    <label htmlFor="end" className="block text-sm font-medium text-orange-700">Kết thúc <span className="text-red-500">*</span></label>
                     <input
-                      type="number"
-                      id="expect_price_range.max"
-                      name="expect_price_range.max"
+                      type="datetime-local"
+                      id="end"
+                      name="end"
+                      value={formData.selected_time_slots.end}
+                      onChange={handleTimeSlotChange}
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                       required
-                      value={formData.expect_price_range.max}
-                      onChange={handleInputChange}
-                      min="0"
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                     />
-                  </div>
-
-                  <div>
-                    <label htmlFor="expect_price_range.currency" className="block text-sm font-medium text-gray-700">Loại tiền tệ <span className="text-red-500">*</span></label>
-                    <select
-                      id="expect_price_range.currency"
-                      name="expect_price_range.currency"
-                      required
-                      value={formData.expect_price_range.currency}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                    >
-                      <option value="VND">VND</option>
-                      <option value="USD">USD</option>
-                      <option value="EUR">EUR</option>
-                    </select>
                   </div>
                 </div>
               </div>
-
-              {/* Ghi chú */}
               <div>
-                <label htmlFor="note" className="block text-sm font-medium text-gray-700">Ghi chú bổ sung</label>
+                <label htmlFor="note" className="block text-sm font-medium text-orange-700">Ghi chú cho admin</label>
                 <textarea
                   id="note"
                   name="note"
                   value={formData.note}
                   onChange={handleInputChange}
                   rows={4}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                   placeholder="Nhập các yêu cầu, thông tin bổ sung hoặc mong muốn về dịch vụ..."
                 />
               </div>
-
-              {/* Button đăng ký */}
+              <div>
+                <label htmlFor="previous_service_experience" className="block text-sm font-medium text-orange-700">Trải nghiệm trước đó</label>
+                <textarea
+                  id="previous_service_experience"
+                  name="previous_service_experience"
+                  value={formData.previous_service_experience || ''}
+                  onChange={handleInputChange}
+                  rows={3}
+                  className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  placeholder="Nhập mô tả về trải nghiệm dịch vụ bạn đã từng thuê trước đó..."
+                />
+              </div>
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={handleCancel}
-                  className="px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-orange-300 shadow-sm text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                   disabled={saving}
                 >
                   Hủy
                 </button>
                 <button
                   type="submit"
-                  className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                   disabled={saving}
                 >
                   {saving ? (
@@ -465,7 +417,7 @@ const ServiceRentalForm: React.FC = () => {
                       </svg>
                       Đang xử lý...
                     </>
-                  ) : "Đăng ký thuê dịch vụ"}
+                  ) : "Thuê dịch vụ"}
                 </button>
               </div>
             </form>

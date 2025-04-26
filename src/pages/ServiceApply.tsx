@@ -3,7 +3,26 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getServiceById } from '../services/service.service';
 import { createServiceRental } from '../services/service_rental.service';
-import DateRangePicker from '../components/DateRangePicker';
+import Dropzone from '../components/Dropzone';
+
+interface IContactInfo {
+  name: string;
+  phone: string;
+  email: string;
+  address: string;
+}
+
+interface IFormData {
+  contact_info: IContactInfo;
+  expect_price_range: {
+    min: number;
+    max: number;
+    currency: string;
+  };
+  image_urls: string[];
+  note: string;
+  promote_text?: string;
+}
 
 const ServiceApply = () => {
   const { id } = useParams<{ id: string }>();
@@ -13,23 +32,33 @@ const ServiceApply = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
   const [service, setService] = useState<any>(null);
-
-  const [formData, setFormData] = useState({
-    note: '',
-    selected_time_slots: {
-      start: '',
-      end: ''
+  const [formData, setFormData] = useState<IFormData>({
+    contact_info: {
+      name: '',
+      phone: '',
+      email: '',
+      address: ''
     },
     expect_price_range: {
       min: 0,
       max: 0,
       currency: 'VND'
-    }
+    },
+    image_urls: [],
+    note: '',
+    promote_text: ''
   });
+  const [supplierId, setSupplierId] = useState('');
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
       navigate('/login');
+      return;
+    }
+
+    if (user && user.metadata.role === 'BUYER') {
+      setShowModal(true);
       return;
     }
 
@@ -46,8 +75,7 @@ const ServiceApply = () => {
         return;
       }
       setService(data);
-      
-      // Khởi tạo giá mong muốn từ price_range của service
+      setSupplierId(data.owner_id || '');
       if (data.price_range) {
         setFormData(prev => ({
           ...prev,
@@ -67,7 +95,16 @@ const ServiceApply = () => {
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
-    if (name.startsWith('expect_price_range.')) {
+    if (name.startsWith('contact_info.')) {
+      const field = name.split('.')[1];
+      setFormData(prev => ({
+        ...prev,
+        contact_info: {
+          ...prev.contact_info,
+          [field]: value
+        }
+      }));
+    } else if (name.startsWith('expect_price_range.')) {
       const field = name.split('.')[1];
       setFormData(prev => ({
         ...prev,
@@ -84,53 +121,59 @@ const ServiceApply = () => {
     }
   };
 
-  const handleDateRangeChange = (start: string, end: string) => {
-    setFormData(prev => ({
-      ...prev,
-      selected_time_slots: {
-        start,
-        end
-      }
-    }));
+
+  const handleImageChange = (urls: string[]) => {
+    setFormData(prev => ({ ...prev, image_urls: urls }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!user) {
-      setError('Vui lòng đăng nhập để thuê dịch vụ');
+      setError('Vui lòng đăng nhập để ứng tuyển');
       return;
     }
-
     try {
       setSubmitting(true);
       const result = await createServiceRental({
-        service_id: id || '',
         buyer_id: user.id,
-        status: 'pending',
-        selected_time_slots: formData.selected_time_slots,
+        supplier_id: supplierId,
+        contact_info: formData.contact_info,
         expect_price_range: formData.expect_price_range,
+        image_urls: formData.image_urls,
         note: formData.note,
-        contact_info: {
-          name: typeof user.metadata?.fullName === 'string' ? user.metadata.fullName : '',
-          email: user.email || '',
-          phone: '',
-          address: ''
-        }
-      });
-
+        promote_text: formData.promote_text,
+        status: 'pending',
+        service_id: id || ''
+      } as any);
       if (result?.id) {
         navigate(`/service-rentals/${result.id}`);
       } else {
-        setError('Không thể đăng ký thuê dịch vụ. Vui lòng thử lại sau.');
+        setError('Không thể đăng ký ứng tuyển. Vui lòng thử lại sau.');
       }
     } catch (err) {
       console.error('Error applying for service:', err);
-      setError('Đã xảy ra lỗi khi đăng ký thuê dịch vụ');
+      setError('Đã xảy ra lỗi khi đăng ký ứng tuyển');
     } finally {
       setSubmitting(false);
     }
   };
+
+  if (showModal) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm transition-colors duration-300">
+        <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center transform scale-100 opacity-100">
+          <h2 className="text-xl font-bold text-orange-600 mb-4">Không thể ứng tuyển</h2>
+          <p className="text-gray-700 mb-6">Bạn là <span className="font-semibold">buyer</span> nên không thể ứng tuyển vào dịch vụ này.</p>
+          <button
+            onClick={() => setShowModal(false)}
+            className="px-6 py-2 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+          >
+            Đóng
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   if (loading) {
     return (
@@ -174,99 +217,102 @@ const ServiceApply = () => {
       <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <div className="px-6 py-4 border-b border-gray-200 bg-orange-500">
-            <h2 className="text-xl font-semibold text-white">Thuê dịch vụ</h2>
+            <h2 className="text-xl font-semibold text-white">Đăng ký ứng tuyển dịch vụ</h2>
             <p className="mt-1 text-sm text-orange-100">
-              Bạn đang thuê dịch vụ: <span className="font-medium">{service.title}</span>
+              Bạn đang đăng ký ứng tuyển dịch vụ: <span className="font-medium">{service.title}</span>
             </p>
           </div>
 
           <form onSubmit={handleSubmit} className="p-6">
             <div className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Thời gian thuê
-                </label>
-                <DateRangePicker
-                  startDate={formData.selected_time_slots.start}
-                  endDate={formData.selected_time_slots.end}
-                  onChange={handleDateRangeChange}
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-gray-700">
-                  Khoảng giá mong muốn
-                </label>
-                <div className="mt-1 flex space-x-4">
-                  <div className="flex-1">
+                <h3 className="text-lg font-semibold mb-4 text-orange-600">Thông tin người ứng tuyển</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label htmlFor="contact_info.name" className="block text-sm font-medium text-orange-700">Tên người ứng tuyển <span className="text-red-500">*</span></label>
                     <input
-                      type="number"
-                      name="expect_price_range.min"
-                      value={formData.expect_price_range.min}
+                      type="text"
+                      id="contact_info.name"
+                      name="contact_info.name"
+                      required
+                      value={formData.contact_info.name || ''}
                       onChange={handleInputChange}
-                      placeholder="Giá thấp nhất"
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
-                  <div className="flex-1">
+                  <div>
+                    <label htmlFor="contact_info.email" className="block text-sm font-medium text-orange-700">Email <span className="text-red-500">*</span></label>
                     <input
-                      type="number"
-                      name="expect_price_range.max"
-                      value={formData.expect_price_range.max}
+                      type="email"
+                      id="contact_info.email"
+                      name="contact_info.email"
+                      required
+                      value={formData.contact_info.email || ''}
                       onChange={handleInputChange}
-                      placeholder="Giá cao nhất"
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
-                  <div className="w-24">
-                    <select
-                      name="expect_price_range.currency"
-                      value={formData.expect_price_range.currency}
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                  <div>
+                    <label htmlFor="contact_info.phone" className="block text-sm font-medium text-orange-700">Số điện thoại <span className="text-red-500">*</span></label>
+                    <input
+                      type="tel"
+                      id="contact_info.phone"
+                      name="contact_info.phone"
+                      required
+                      value={formData.contact_info.phone || ''}
                       onChange={handleInputChange}
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    >
-                      <option value="VND">VND</option>
-                      <option value="USD">USD</option>
-                    </select>
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    />
+                  </div>
+                  <div>
+                    <label htmlFor="contact_info.address" className="block text-sm font-medium text-orange-700">Địa chỉ</label>
+                    <input
+                      type="text"
+                      id="contact_info.address"
+                      name="contact_info.address"
+                      value={formData.contact_info.address || ''}
+                      onChange={handleInputChange}
+                      className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    />
                   </div>
                 </div>
               </div>
-
               <div>
-                <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-                  Ghi chú thêm
-                </label>
+                <label htmlFor="promote_text" className="block text-sm font-medium text-orange-700">Chương trình khuyến mãi <span className="text-red-500">*</span></label>
                 <textarea
-                  name="note"
-                  id="note"
+                  id="promote_text"
+                  name="promote_text"
+                  value={formData.promote_text || ''}
+                  onChange={handleInputChange}
                   rows={4}
+                  className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  placeholder="Nhập thông tin về chương trình khuyến mãi, ưu đãi hoặc cam kết của bạn..."
+                  required
+                />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold mb-4 text-orange-600">Hình ảnh minh họa</h3>
+                <Dropzone value={formData.image_urls} onChange={handleImageChange} maxFiles={5} />
+              </div>
+              <div>
+                <label htmlFor="note" className="block text-sm font-medium text-orange-700">Ghi chú cho admin</label>
+                <textarea
+                  id="note"
+                  name="note"
                   value={formData.note}
                   onChange={handleInputChange}
-                  className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                  placeholder="Nhập yêu cầu hoặc ghi chú thêm của bạn..."
+                  rows={4}
+                  className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                  placeholder="Nhập ghi chú cho admin..."
                 />
               </div>
-
-              {error && (
-                <div className="rounded-md bg-red-50 p-4">
-                  <div className="flex">
-                    <div className="flex-shrink-0">
-                      <svg className="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor">
-                        <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
-                      </svg>
-                    </div>
-                    <div className="ml-3">
-                      <p className="text-sm text-red-700">{error}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-
               <div className="flex justify-end space-x-3">
                 <button
                   type="button"
                   onClick={() => navigate('/services')}
-                  className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  className="inline-flex items-center px-4 py-2 border border-orange-300 shadow-sm text-sm font-medium rounded-md text-orange-700 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                 >
                   Hủy
                 </button>
@@ -275,7 +321,7 @@ const ServiceApply = () => {
                   disabled={submitting}
                   className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 disabled:opacity-50"
                 >
-                  {submitting ? 'Đang xử lý...' : 'Thuê dịch vụ'}
+                  {submitting ? 'Đang xử lý...' : 'Đăng ký ứng tuyển'}
                 </button>
               </div>
             </div>

@@ -45,6 +45,7 @@ const ServiceDetail = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showModal, setShowModal] = useState(false);
 
   useEffect(() => {
     const fetchServiceDetail = async () => {
@@ -117,6 +118,21 @@ const ServiceDetail = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
+      {/* Modal cảnh báo cho buyer */}
+      {showModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/20 backdrop-blur-sm transition-colors duration-300">
+          <div className="bg-white rounded-lg shadow-lg p-8 max-w-sm w-full text-center transform scale-100 opacity-100">
+            <h2 className="text-xl font-bold text-orange-600 mb-4">Không thể đăng ký ứng tuyển</h2>
+            <p className="text-gray-700 mb-6">Bạn là <span className="font-semibold">buyer</span> nên không thể đăng ký ứng tuyển dịch vụ này.</p>
+            <button
+              onClick={() => setShowModal(false)}
+              className="px-6 py-2 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
+            >
+              Đóng
+            </button>
+          </div>
+        </div>
+      )}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="mb-6">
           <button 
@@ -219,7 +235,7 @@ const ServiceDetail = () => {
               <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
                 <div className="p-6">
                   <h3 className="text-lg font-semibold text-gray-900 mb-4">Lịch làm việc</h3>
-                  <div className="grid grid-cols-7 gap-2">
+                  <div className="grid grid-cols-7 gap-2 text-sm">
                     {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
                       const isAvailable = isDayAvailable(day);
                       return (
@@ -261,21 +277,33 @@ const ServiceDetail = () => {
                     user && user.metadata.role === AccountRole.BUYER ? (
                       <div className="space-y-4">
                         <Link
-                          to={`/services/${service.id}/apply`}
+                          to={`/services/${service.id}/rent`}
                           className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                         >
-                          Đăng ký dịch vụ
+                           Thuê dịch vụ
                         </Link>
-                        <Link
-                          to={`/services/${service.id}/rent`}
+                        <button
+                          type="button"
+                          onClick={() => setShowModal(true)}
                           className="w-full inline-flex justify-center items-center px-6 py-3 border border-orange-600 rounded-md shadow-sm text-base font-medium text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
                         >
-                          Thuê dịch vụ
-                        </Link>
+                          Đăng ký ứng tuyển
+                        </button>
                       </div>
                     ) : (
-                      <div className="text-center text-gray-500 italic">
-                        Bạn đã đăng nhập nhưng không có quyền đăng ký dịch vụ này.
+                      <div className="space-y-4">
+                        <Link
+                          to={`/services/${service.id}/rent`}
+                          className="w-full inline-flex justify-center items-center px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                        >
+                           Thuê dịch vụ
+                        </Link>
+                        <Link
+                          to={`/services/${service.id}/apply`}
+                          className="w-full inline-flex justify-center items-center px-6 py-3 border border-orange-600 rounded-md shadow-sm text-base font-medium text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                        >
+                          Đăng ký ứng tuyển
+                        </Link>
                       </div>
                     )
                   ) : (
