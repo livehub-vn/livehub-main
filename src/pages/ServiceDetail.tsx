@@ -83,13 +83,13 @@ const ServiceDetail = () => {
 
   const formatDay = (day?: string) => {
     const days: Record<string, string> = {
-      'mon': 'Thứ 2',
-      'tue': 'Thứ 3',
-      'wed': 'Thứ 4',
-      'thu': 'Thứ 5',
-      'fri': 'Thứ 6',
-      'sat': 'Thứ 7',
-      'sun': 'Chủ nhật'
+      'mon': 'T2',
+      'tue': 'T3',
+      'wed': 'T4',
+      'thu': 'T5',
+      'fri': 'T6',
+      'sat': 'T7',
+      'sun': 'CN'
     };
     return day ? days[day] || day : '';
   };
@@ -234,7 +234,7 @@ const ServiceDetail = () => {
 
               <div className="bg-white shadow-lg rounded-lg overflow-hidden mb-6">
                 <div className="p-6">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Lịch làm việc</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Lịch cho thuê</h3>
                   <div className="grid grid-cols-7 gap-2 text-sm">
                     {['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].map(day => {
                       const isAvailable = isDayAvailable(day);
