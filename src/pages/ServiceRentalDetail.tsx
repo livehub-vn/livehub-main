@@ -283,11 +283,19 @@ const ServiceRentalDetail: React.FC = () => {
               <div className="mt-6">
                 <h4 className="text-sm font-medium text-gray-600 mb-2">Các ngày đăng ký thuê</h4>
                 <div className="flex flex-wrap gap-2">
-                  {rental?.selected_time_slots?.map((slot: string, index: number) => (
-                    <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
-                      {getDayDisplay(slot)}
+                  {Array.isArray(rental?.selected_time_slots) ? (
+                    rental.selected_time_slots.map((slot: any, index: number) => (
+                      <span key={index} className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                        {getDayDisplay(slot)}
+                      </span>
+                    ))
+                  ) : rental?.selected_time_slots?.start && rental?.selected_time_slots?.end ? (
+                    <span className="bg-orange-100 text-orange-800 px-3 py-1 rounded-full text-sm">
+                      {`${new Date(rental.selected_time_slots.start).toLocaleString()} - ${new Date(rental.selected_time_slots.end).toLocaleString()}`}
                     </span>
-                  ))}
+                  ) : (
+                    <span className="text-gray-500">Không có thông tin</span>
+                  )}
                 </div>
               </div>
 

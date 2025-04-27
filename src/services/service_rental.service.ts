@@ -86,7 +86,7 @@ export const getServiceRentalsByServiceId = async (serviceId: string) => {
     return formattedData || [];
   } catch (error: unknown) {
     if (error instanceof Error) {
-    console.error('Lỗi khi lấy danh sách yêu cầu thuê:', error);
+    console.error('Lỗi khi lấy danh sách thuê dịch vụ:', error);
       throw new Error(`Không thể lấy danh sách thuê dịch vụ: ${error.message}`);
     }
     throw new Error('Đã xảy ra lỗi không xác định');
@@ -102,26 +102,22 @@ export const getServiceRentalById = async (id: string) => {
       .from('service_rental')
       .select(`
         *,
-        buyer:buyer_id(id, email, user_metadata),
-        service:service_id(id, title, owner_id)
+        service:service_id (
+          id,
+          title,
+          description,
+          image_urls,
+          price_range
+        )
       `)
       .eq('id', id)
       .single();
-    
+
     if (error) throw error;
-    
-    // Xử lý dữ liệu để thêm tên người thuê và tên dịch vụ
-    const formattedData = data ? {
-      ...data,
-      buyer_name: data.buyer?.user_metadata?.fullName || 'Chưa có tên',
-      service_title: data.service?.title || 'Chưa có tiêu đề',
-      supplier_id: data.service?.owner_id
-    } : null;
-    
-    return formattedData;
+    return data;
   } catch (error) {
-    console.error('Lỗi khi lấy thông tin yêu cầu thuê:', error);
-    return null;
+    console.error('Lỗi khi lấy thông tin đơn thuê dịch vụ:', error);
+    throw error;
   }
 };
 
@@ -148,24 +144,19 @@ export const getServiceRentalsByBuyerId = async (buyerId: string) => {
 /**
  * Tạo yêu cầu thuê mới
  */
-export const createServiceRental = async (data: IServiceRentalInput): Promise<IServiceRental | null> => {
+export const createServiceRental = async (data: IServiceRentalInput) => {
   try {
     const { data: result, error } = await supabase
-      .from('service_rentals')
+      .from('service_rental')
       .insert(data)
       .select()
       .single();
-    
-    if (error) {
-      throw new Error(`Không thể tạo yêu cầu thuê dịch vụ: ${error.message}`);
-    }
 
+    if (error) throw error;
     return result;
   } catch (error) {
-    if (error instanceof Error) {
-      throw new Error(`Không thể tạo yêu cầu thuê dịch vụ: ${error.message}`);
-    }
-    throw new Error('Không thể tạo yêu cầu thuê dịch vụ');
+    console.error('Lỗi khi tạo đơn thuê dịch vụ:', error);
+    throw error;
   }
 };
 
@@ -572,5 +563,30 @@ export const getAllServiceRentalByServiceIdCSV = async (serviceId: string) => {
   } catch (error) {
     console.error(`Error fetching service rentals for CSV export:`, error);
     return [];
+  }
+};
+
+export const getMyRentedServices = async (buyerId: string) => {
+  try {
+    const { data, error } = await supabase
+      .from('service_rental')
+      .select(`
+        *,
+        service:service_id (
+          id,
+          title,
+          description,
+          image_urls,
+          price_range
+        )
+      `)
+      .eq('buyer_id', buyerId)
+      .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return { data: data || [] };
+  } catch (error) {
+    console.error('Lỗi khi lấy danh sách dịch vụ đã thuê:', error);
+    throw error;
   }
 };

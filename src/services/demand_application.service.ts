@@ -38,24 +38,12 @@ export const getDemandApplicationById = async (id: string) => {
   try {
     const { data, error } = await supabase
       .from('demand_application')
-      .select(`
-        *,
-        supplier:supplier_id(id, email, user_metadata),
-        demand:demand_id(id, title)
-      `)
+      .select('*')
       .eq('id', id)
       .single();
     
     if (error) throw error;
-    
-    // Thêm tên người ứng tuyển và tên nhu cầu
-    const formattedData = data ? {
-      ...data,
-      supplier_name: data.supplier?.user_metadata?.fullName || 'Chưa có tên',
-      demand_title: data.demand?.title || 'Chưa có tiêu đề'
-    } : null;
-    
-    return formattedData;
+    return data;
   } catch (error) {
     console.error('Lỗi khi lấy thông tin ứng tuyển:', error);
     return null;

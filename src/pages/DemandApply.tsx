@@ -2,32 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 import { getDemandById } from '../services/demand.service';
+import { createDemandApplication} from '../services/demand_application.service';
 import Dropzone from '../components/Dropzone';
 
-// Interface cho đơn ứng tuyển
-interface IApplicationInput {
-  demand_id: string;
-  supplier_id: string;
-  promote_text: string;
-  image_urls: string[];
-  note?: string;
-  contact_info: string;
-}
 
 // Giả định hàm API để gửi đơn ứng tuyển
-const submitApplication = async (application: IApplicationInput) => {
-  // Mock API - Chờ một giây
-  await new Promise(resolve => setTimeout(resolve, 1000));
-  
-  // Giả định kết quả thành công
-  return {
-    id: 'new-application-id',
-    ...application,
-    status: 'pending',
-    created_at: new Date().toISOString(),
-    updated_at: new Date().toISOString()
-  };
-};
 
 
 const DemandApply: React.FC = () => {
@@ -41,9 +20,12 @@ const DemandApply: React.FC = () => {
   const [showModal, setShowModal] = useState(false);
   
   // Form state
+  const [contactAddress, setContactAddress] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactEmail, setContactEmail] = useState('');
   const [promoteText, setPromoteText] = useState('');
+  const [] = useState('');
   const [note, setNote] = useState('');
-  const [contactInfo, setContactInfo] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>([]);
 
   useEffect(() => {
@@ -62,14 +44,13 @@ const DemandApply: React.FC = () => {
 
       // Cập nhật cách truy cập thông tin người dùng
       if (user?.metadata) {
-        const contactText = [
-          `Người liên hệ: ${user.metadata.fullName}`,
-          `Email: ${user.email}`
-        ].filter(Boolean).join('\n');
-        
-        setContactInfo(contactText);
+        setContactEmail(user.email || '');
+        setContactPhone(user.metadata.phoneNumber || '');
+        setContactAddress(user.metadata.address || '');
       } else {
-        setContactInfo(`Người liên hệ: ${user?.email}\nEmail: ${user?.email}`);
+        setContactEmail(user?.email || '');
+        setContactPhone('');
+        setContactAddress(user?.metadata?.address || '');
       }
     };
 
@@ -84,126 +65,67 @@ const DemandApply: React.FC = () => {
 
   const loadDemandData = async () => {
     if (!id) {
-      console.log('No demand ID provided');
       return;
     }
-
     try {
       setLoading(true);
-      console.log('Fetching demand data for ID:', id);
-      
       const demandData = await getDemandById(id);
-      console.log('Received demand data:', demandData);
-      
       if (!demandData) {
-        console.log('No demand data found');
         setError('Không tìm thấy thông tin nhu cầu');
         setLoading(false);
         return;
       }
-
-      // Kiểm tra xem người dùng có phải là người tạo demand không
-      if (user?.id === demandData.creator) {
-        console.log('User is the creator of this demand');
-        setError('Bạn không thể ứng tuyển vào nhu cầu do chính mình tạo');
-        setLoading(false);
-        return;
-      }
-
       // Kiểm tra trạng thái nhu cầu
-      if (demandData.status !== 'open') {
-        console.log('Demand is not open:', demandData.status);
+      if (!['open', 'approved'].includes(demandData.status)) {
         setError('Nhu cầu này không còn nhận ứng tuyển');
         setLoading(false);
         return;
       }
-
       setDemand(demandData);
       setLoading(false);
     } catch (err: any) {
-      console.error('Detailed error when loading demand:', {
-        error: err,
-        message: err.message,
-        stack: err.stack,
-        response: err.response?.data
-      });
-      
-      let errorMessage = 'Đã xảy ra lỗi khi tải dữ liệu.';
-      if (err.response?.data?.message) {
-        errorMessage += ` Chi tiết: ${err.response.data.message}`;
-      }
-      setError(errorMessage);
+      setError('Đã xảy ra lỗi khi tải dữ liệu.');
       setLoading(false);
     }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
     if (!id || !user || !demand) {
-      console.log('Missing required data:', { id, user, demand });
       return;
     }
-
     try {
       setSubmitting(true);
-      console.log('Starting submission with data:', {
-        demand_id: id,
-        supplier_id: user.id,
-        promote_text: promoteText,
-        image_urls: imageUrls,
-        note,
-        contact_info: contactInfo
-      });
-
-      // Kiểm tra các trường bắt buộc
+      // Validate
+      if (!contactAddress || !contactPhone || !contactEmail) {
+        setError('Vui lòng nhập đầy đủ thông tin liên hệ');
+        setSubmitting(false);
+        return;
+      }
       if (!promoteText.trim()) {
-        setError('Vui lòng nhập nội dung quảng bá');
+        setError('Vui lòng nhập chương trình khuyến mãi/giới thiệu');
         setSubmitting(false);
         return;
       }
-
-      if (!contactInfo.trim()) {
-        setError('Vui lòng nhập thông tin liên hệ');
-        setSubmitting(false);
-        return;
-      }
-
-      // Chuẩn bị dữ liệu đơn ứng tuyển
-      const applicationData: IApplicationInput = {
+      // Chuẩn bị dữ liệu
+      const applicationData = {
         demand_id: id,
-        supplier_id: user.id,
+        contact_info: {
+          address: contactAddress,
+          phone: contactPhone,
+          email: contactEmail
+        },
         promote_text: promoteText,
         image_urls: imageUrls,
-        note: note || undefined,
-        contact_info: contactInfo
+        note: note || undefined
       };
-
-      console.log('Sending application data:', applicationData);
-
-      // Gửi đơn ứng tuyển
-      const response = await submitApplication(applicationData);
-      console.log('Application submission response:', response);
-
-      // Chuyển hướng đến trang chi tiết nhu cầu
+      // Gửi lên supabase
+      await createDemandApplication(applicationData);
       setSubmitting(false);
+      alert('Đơn ứng tuyển của bạn đã được gửi và đang chờ xử lý.');
       navigate(`/demands/${id}`);
-      
-      // Hiển thị thông báo thành công
-      alert('Đơn ứng tuyển của bạn đã được gửi thành công!');
     } catch (err: any) {
-      console.error('Detailed error when submitting application:', {
-        error: err,
-        message: err.message,
-        stack: err.stack,
-        response: err.response?.data
-      });
-      
-      let errorMessage = 'Đã xảy ra lỗi khi gửi đơn ứng tuyển.';
-      if (err.response?.data?.message) {
-        errorMessage += ` Chi tiết: ${err.response.data.message}`;
-      }
-      setError(errorMessage);
+      setError('Đã xảy ra lỗi khi gửi đơn ứng tuyển: ' + (err?.message || JSON.stringify(err)));
       setSubmitting(false);
     }
   };
@@ -295,99 +217,70 @@ const DemandApply: React.FC = () => {
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
             {/* Thông tin cá nhân */}
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin cá nhân</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin liên hệ</h3>
               <div className="grid grid-cols-1 gap-6">
                 <div>
-                  <label htmlFor="contact_info.name" className="block text-sm font-medium text-gray-700">
-                    Họ và tên <span className="text-red-500">*</span>
+                  <label htmlFor="contact_address" className="block text-sm font-medium text-gray-700">
+                    Địa chỉ <span className="text-red-500">*</span>
                   </label>
                   <input
                     type="text"
-                    name="contact_info.name"
-                    id="contact_info.name"
-                    value={contactInfo.split('\n')[0].split(': ')[1]}
-                    onChange={(e) => setContactInfo(e.target.value)}
+                    name="contact_address"
+                    id="contact_address"
+                    value={contactAddress}
+                    onChange={(e) => setContactAddress(e.target.value)}
                     className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     required
                   />
                 </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <label htmlFor="contact_info.phone" className="block text-sm font-medium text-gray-700">
-                      Số điện thoại <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="tel"
-                      name="contact_info.phone"
-                      id="contact_info.phone"
-                      value={contactInfo.split('\n')[1].split(': ')[1]}
-                      onChange={(e) => setContactInfo(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label htmlFor="contact_info.email" className="block text-sm font-medium text-gray-700">
-                      Email <span className="text-red-500">*</span>
-                    </label>
-                    <input
-                      type="email"
-                      name="contact_info.email"
-                      id="contact_info.email"
-                      value={contactInfo.split('\n')[2].split(': ')[1]}
-                      onChange={(e) => setContactInfo(e.target.value)}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      required
-                    />
-                  </div>
+                <div>
+                  <label htmlFor="contact_phone" className="block text-sm font-medium text-gray-700">
+                    Số điện thoại <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="tel"
+                    name="contact_phone"
+                    id="contact_phone"
+                    value={contactPhone}
+                    onChange={(e) => setContactPhone(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    required
+                  />
+                </div>
+                <div>
+                  <label htmlFor="contact_email" className="block text-sm font-medium text-gray-700">
+                    Email <span className="text-red-500">*</span>
+                  </label>
+                  <input
+                    type="email"
+                    name="contact_email"
+                    id="contact_email"
+                    value={contactEmail}
+                    onChange={(e) => setContactEmail(e.target.value)}
+                    className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    required
+                  />
                 </div>
               </div>
             </div>
 
             {/* Thông tin ứng tuyển */}
             <div className="bg-gray-50 p-6 rounded-lg">
-              <h3 className="text-lg font-medium text-gray-900 mb-6">Thông tin ứng tuyển</h3>
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Chương trình khuyến mãi</h3>
               <div className="space-y-6">
                 <div>
-                  <label htmlFor="promotional_text" className="block text-sm font-medium text-gray-700">
-                    Giới thiệu bản thân <span className="text-red-500">*</span>
-                  </label>
-                  <div className="mt-1">
-                    <textarea
-                      name="promotional_text"
-                      id="promotional_text"
-                      rows={4}
-                      value={promoteText}
-                      onChange={(e) => setPromoteText(e.target.value)}
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      placeholder="Giới thiệu ngắn gọn về bản thân và kinh nghiệm của bạn..."
-                      required
-                    />
-                  </div>
-                  <p className="mt-2 text-sm text-gray-500">
-                    Hãy nêu rõ kinh nghiệm và kỹ năng liên quan đến nhu cầu này
-                  </p>
+                  <textarea
+                    name="promote_text"
+                    id="promote_text"
+                    rows={4}
+                    value={promoteText}
+                    onChange={(e) => setPromoteText(e.target.value)}
+                    className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                    placeholder="Nhập chương trình khuyến mãi hoặc giới thiệu bản thân..."
+                    required
+                  />
                 </div>
-
-                <div>
-                  <label htmlFor="note" className="block text-sm font-medium text-gray-700">
-                    Ghi chú thêm
-                  </label>
-                  <div className="mt-1">
-                    <textarea
-                      name="note"
-                      id="note"
-                      rows={4}
-                      value={note}
-                      onChange={(e) => setNote(e.target.value)}
-                      className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                      placeholder="Nhập yêu cầu hoặc ghi chú thêm của bạn..."
-                    />
-                  </div>
-                </div>
-
+                
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Hình ảnh minh họa
@@ -402,6 +295,20 @@ const DemandApply: React.FC = () => {
                   </p>
                 </div>
               </div>
+            </div>
+
+            {/* Ghi chú cho admin */}
+            <div className="bg-gray-50 p-6 rounded-lg">
+              <h3 className="text-lg font-medium text-gray-900 mb-6">Ghi chú cho admin</h3>
+              <textarea
+                name="note"
+                id="note"
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+                className="block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                placeholder="Nhập ghi chú cho admin (nếu có)..."
+              />
             </div>
 
             {/* Error message */}

@@ -262,7 +262,7 @@ const ServiceRentalList: React.FC = () => {
                         <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                           <button
                             onClick={() => navigate(`/service-rentals/${rental.id}`)}
-                            className="text-blue-600 hover:text-blue-900"
+                            className="text-orange-600 hover:text-orange-900"
                           >
                             Xem chi tiết
                           </button>

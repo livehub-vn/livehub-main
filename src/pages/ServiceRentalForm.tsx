@@ -64,9 +64,9 @@ const ServiceRentalForm: React.FC = () => {
     },
     previous_service_experience: ''
   });
-  const [supplierId, setSupplierId] = useState<string>('');
+  const [, setSupplierId] = useState<string>('');
 
-  const [selectedDates] = useState<string[]>([]);
+  const [] = useState<string[]>([]);
 
   useEffect(() => {
     const checkAuth = async () => {
@@ -180,19 +180,18 @@ const ServiceRentalForm: React.FC = () => {
         return;
       }
 
-      if (selectedDates.length === 0) {
-        setError('Vui lòng chọn ít nhất một ngày làm việc');
+      if (!formData.selected_time_slots.start || !formData.selected_time_slots.end) {
+        setError('Vui lòng chọn thời gian bắt đầu và kết thúc');
         setSaving(false);
         return;
       }
 
-      const rentalData: any = {
-        status: 'pending',
+      const rentalData = {
+        status: 'pending' as const,
         service_id: formData.service_id,
-        supplier_id: supplierId,
         buyer_id: formData.buyer_id,
         selected_time_slots: formData.selected_time_slots,
-        days: selectedDates,
+        expect_price_range: formData.expect_price_range,
         note: formData.note,
         contact_info: formData.contact_info,
         previous_service_experience: formData.previous_service_experience

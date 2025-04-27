@@ -374,12 +374,10 @@ const DemandPostEditor: React.FC = () => {
       // Chuẩn bị dữ liệu đơn ứng tuyển
       const applicationInput: IDemandApplicationInput = {
         demand_id: id as string,
-        applicant_name: applicationData.applicant_name,
-        demand_title: applicationData.demand_title,
         contact_info: applicationData.contact_info,
-        promotional_program: applicationData.promotional_program,
+        promote_text: applicationData.promotional_program,
         image_urls: applicationData.image_urls || [],
-        admin_notes: applicationData.admin_notes,
+        note: applicationData.admin_notes,
         status: 'pending'
       };
 

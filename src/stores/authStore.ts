@@ -34,7 +34,9 @@ export const useAuthStore = create<AuthState>()(
                 id: response.user.id,
                 email: response.user.email || '',
                 metadata: response.user.user_metadata as AccountMetadata,
-                created_at: response.user.created_at
+                created_at: response.user.created_at,
+                phone: undefined,
+                user_metadata: undefined
               }, 
               isAuthenticated: true 
             });
@@ -68,7 +70,9 @@ export const useAuthStore = create<AuthState>()(
                 id: response.user.id,
                 email: response.user.email || '',
                 metadata: response.user.user_metadata as AccountMetadata,
-                created_at: response.user.created_at
+                created_at: response.user.created_at,
+                phone: undefined,
+                user_metadata: undefined
               }, 
               isAuthenticated: true 
             });
@@ -90,7 +94,9 @@ export const useAuthStore = create<AuthState>()(
                 id: response.user.id,
                 email: response.user.email || '',
                 metadata: response.user.user_metadata as AccountMetadata,
-                created_at: response.user.created_at
+                created_at: response.user.created_at,
+                phone: undefined,
+                user_metadata: undefined
               }
             });
           }
@@ -111,7 +117,9 @@ export const useAuthStore = create<AuthState>()(
                 id: response.user.id,
                 email: response.user.email || '',
                 metadata: response.user.user_metadata as AccountMetadata,
-                created_at: response.user.created_at
+                created_at: response.user.created_at,
+                phone: undefined,
+                user_metadata: undefined
               }, 
               isAuthenticated: true 
             });

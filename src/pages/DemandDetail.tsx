@@ -362,7 +362,7 @@ const DemandDetail: React.FC = () => {
                     className="w-full px-6 py-3 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
                     onClick={() => navigate(`/demands/${id}/apply`)}
                   >
-                    Ứng tuyển vào nhu cầu này
+                    Đăng ký ứng tuyển
                   </button>
                 </div>
               )}

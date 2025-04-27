@@ -21,6 +21,9 @@ import ServiceReview from './pages/ServiceReview';
 import MyDemands from './pages/MyDemands';
 import ApprovedDemands from './pages/ApprovedDemands';
 import Demands from './pages/Demands';
+import MyRentedServices from './pages/MyRentedServices';
+import MyApplications from './pages/MyApplications';
+import MyApplicationDetail from './pages/MyApplicationDetail';
 
 const App: React.FC = () => {
   return (
@@ -50,6 +53,9 @@ const App: React.FC = () => {
             <Route path="/demands/:id/apply" element={<DemandApply />} />
             <Route path="/my-demands" element={<MyDemands />} />
             <Route path="/demands/approved" element={<ApprovedDemands />} />
+            <Route path="/my-rented-services" element={<MyRentedServices />} />
+            <Route path="/my-applications" element={<MyApplications />} />
+            <Route path="/my-applications/:id" element={<MyApplicationDetail />} />
           </Routes>
         </main>
         <Footer />

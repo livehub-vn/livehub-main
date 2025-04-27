@@ -104,16 +104,14 @@ export interface IDemandApplication {
 
 export interface IDemandApplicationInput {
   demand_id: string;
-  applicant_name: string;
-  demand_title: string;
   contact_info: {
     address: string;
     phone: string;
     email: string;
   };
-  promotional_program?: string;
+  promote_text?: string;
   image_urls?: string[];
-  admin_notes?: string;
+  note?: string;
   status?: string;
 }
 

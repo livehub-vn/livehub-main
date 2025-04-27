@@ -2,8 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { getDemands, IDemand, IDemandFilter } from '../services/demand.service';
 import { useAuthStore } from '../stores/authStore';
-import { format } from 'date-fns';
-import { vi } from 'date-fns/locale';
 
 const Demands: React.FC = () => {
   const { isAuthenticated } = useAuthStore();
@@ -86,46 +84,24 @@ const Demands: React.FC = () => {
 
         {/* Bộ lọc và tìm kiếm - đã đơn giản hóa */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <form onSubmit={handleSearchSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <div className="md:col-span-3">
-                <label htmlFor="searchTerm" className="block text-sm font-medium text-gray-700 mb-1">Tìm kiếm</label>
-                <div className="relative rounded-md shadow-sm">
-                  <input
-                    type="text"
-                    id="searchTerm"
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    placeholder="Tìm kiếm theo tiêu đề, mô tả..."
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-gray-400 focus:ring-gray-400 sm:text-sm"
-                  />
-                  <button
-                    type="submit"
-                    className="absolute inset-y-0 right-0 flex items-center px-3 bg-[#FF9800] text-white rounded-r-md hover:bg-[#FFA726]"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clipRule="evenodd" />
-                    </svg>
-                  </button>
-                </div>
-              </div>
-
-              
-            </div>
-
-            <div className="flex justify-end">
-              <button
-                type="button"
-                onClick={clearFilters}
-                className="px-4 py-2 mr-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-gray-400"
-              >
-                Xóa bộ lọc
-              </button>
+          <form onSubmit={handleSearchSubmit} className="flex justify-center">
+            <div className="relative w-full max-w-xl">
+              <input
+                type="text"
+                id="searchTerm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Tìm kiếm nhu cầu..."
+                className="block w-full rounded-full border border-gray-300 shadow-sm py-4 px-6 pr-12 text-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
+              />
               <button
                 type="submit"
-                className="px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-[#FF9800] hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
+                className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-orange-500"
+                tabIndex={-1}
               >
-                Áp dụng
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                </svg>
               </button>
             </div>
           </form>
@@ -177,61 +153,55 @@ const Demands: React.FC = () => {
               Hiển thị {demands.length} trong số {totalItems} kết quả
             </div>
 
-            <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
-              <ul className="divide-y divide-gray-200">
-                {demands.map((demand) => (
-                  <li key={demand.id} className="hover:bg-gray-50">
-                    <Link to={`/demands/${demand.id}`} className="block">
-                      <div className="px-6 py-5">
-                        <div className="flex items-center justify-between">
-                          <h3 className="text-lg font-medium text-[#FF9800] truncate">{demand.title}</h3>
-                        </div>
-                        
-                        <div className="mt-2 text-sm text-gray-500 line-clamp-2">{demand.description}</div>
-                        
-                        <div className="mt-3 flex flex-wrap items-center text-xs text-gray-500">
-                          <span className="mr-4">
-                            <span className="font-medium">Danh mục:</span> {demand.category}
-                          </span>
-                          
-                          {demand.price_range && (
-                            <span className="mr-4">
-                              <span className="font-medium">Ngân sách:</span> {demand.price_range.min && `${demand.price_range.min.toLocaleString()} - `}
-                              {demand.price_range.max && `${demand.price_range.max.toLocaleString()} ${demand.price_range.currency || 'VND'}`}
-                            </span>
-                          )}
-
-                          {demand.date_range?.days && demand.date_range.days.length > 0 && (
-                            <span className="mr-4">
-                              <span className="font-medium">Ngày làm việc:</span> {demand.date_range.days.map(day => {
-                                switch(day) {
-                                  case 'mon': return 'Thứ 2';
-                                  case 'tue': return 'Thứ 3';
-                                  case 'wed': return 'Thứ 4';
-                                  case 'thu': return 'Thứ 5';
-                                  case 'fri': return 'Thứ 6';
-                                  case 'sat': return 'Thứ 7';
-                                  case 'sun': return 'CN';
-                                  default: return day;
-                                }
-                              }).join(', ')}
-                            </span>
-                          )}
-                          
-                          <span>
-                            <span className="font-medium">Đăng ngày:</span> {format(new Date(demand.created_at), 'dd/MM/yyyy', { locale: vi })}
-                          </span>
-                        </div>
-                      </div>
-                    </Link>
-                  </li>
-                ))}
-              </ul>
+            <div className="grid grid-cols-1 gap-8 sm:grid-cols-2 lg:grid-cols-3">
+              {demands.map((demand) => (
+                <div key={demand.id} className="flex flex-col rounded-lg shadow-lg overflow-hidden bg-white">
+                  <div className="flex-shrink-0">
+                    <img
+                      className="h-48 w-full object-cover"
+                      src={demand.image_urls?.[0] || 'https://via.placeholder.com/400x200'}
+                      alt={demand.title}
+                    />
+                  </div>
+                  <div className="flex-1 p-6 flex flex-col justify-between">
+                    <div className="flex-1">
+                      <p className="text-xl font-semibold text-gray-900">{demand.title}</p>
+                      <p className="mt-3 text-base text-gray-500 line-clamp-3">{demand.description}</p>
+                      {demand.price_range && (
+                        <p className="mt-2 text-sm text-gray-700">
+                          Ngân sách: {demand.price_range.min?.toLocaleString()} - {demand.price_range.max?.toLocaleString()} {demand.price_range.currency || 'VND'}
+                        </p>
+                      )}
+                      {demand.category && (
+                        <span className="mt-2 inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded">
+                          {demand.category}
+                        </span>
+                      )}
+                    </div>
+                    <div className="mt-6 flex gap-2 items-center justify-center">
+                      <Link
+                        to={`/demands/${demand.id}`}
+                        className="inline-flex items-center px-6 py-3 border border-transparent text-base font-semibold rounded-lg shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all"
+                        style={{ minHeight: 48 }}
+                      >
+                        Xem chi tiết
+                      </Link>
+                      <Link
+                        to={`/demands/${demand.id}/apply`}
+                        className="inline-flex items-center px-6 py-3 border border-gray-300 text-base font-semibold rounded-lg shadow-sm text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500 transition-all"
+                        style={{ minHeight: 48 }}
+                      >
+                        Ứng tuyển
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              ))}
             </div>
 
             {/* Phân trang */}
             {totalPages > 1 && (
-              <div className="flex justify-center">
+              <div className="flex justify-center mt-8">
                 <nav className="flex items-center">
                   <button
                     onClick={() => setPage(prev => Math.max(prev - 1, 1))}
@@ -242,11 +212,9 @@ const Demands: React.FC = () => {
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
-                  
                   <div className="px-4 py-1 border-t border-b border-gray-300 bg-white text-gray-700">
                     Trang {page} / {totalPages}
                   </div>
-                  
                   <button
                     onClick={() => setPage(prev => Math.min(prev + 1, totalPages))}
                     disabled={page === totalPages}

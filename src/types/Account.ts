@@ -6,14 +6,16 @@ export enum AccountRole {
 }
 
 export type AccountMetadata = {
+    [x: string]: string;
     fullName: string;
     role: AccountRole;
     taxId: string;
     address: string;
 }
 
-
-export type Account = {
+export interface Account {
+    phone: any;
+    user_metadata: any;
     id: string;
     email: string;
     metadata: AccountMetadata;
