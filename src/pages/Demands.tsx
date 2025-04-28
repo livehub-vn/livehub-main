@@ -60,12 +60,6 @@ const Demands: React.FC = () => {
     }
   };
 
-  const handleSearchSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    console.log('Tìm kiếm với từ khóa:', searchTerm);
-    setPage(1);
-    loadDemands();
-  };
 
   const clearFilters = () => {
     setFilter({ is_public: true, status: 'approved' });

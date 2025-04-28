@@ -27,7 +27,7 @@ const Services = () => {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [isMyServices, setIsMyServices] = useState(false);
+  const [isMyServices] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [filteredServices, setFilteredServices] = useState<Service[]>([]);
 
@@ -70,9 +70,6 @@ const Services = () => {
     setFilteredServices(filtered);
   }, [searchQuery, services]);
 
-  const toggleMyServices = () => {
-    setIsMyServices(!isMyServices);
-  };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
