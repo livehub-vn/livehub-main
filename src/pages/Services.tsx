@@ -146,20 +146,13 @@ const Services = () => {
             {user && (
               <button
                 onClick={() => {
-                  if (!isMyServices) {
-                    // Nếu đang ở chế độ xem tất cả, chuyển sang xem dịch vụ đã thuê
-                    toggleMyServices();
-                  } else {
-                    // Nếu đang ở chế độ xem dịch vụ đã thuê, chuyển hướng sang /service-rentals
-                    window.location.href = '/service-rentals';
-                  }
+                  window.location.href = '/service-rentals';
                 }}
                 className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
-                {isMyServices ? 'Xem tất cả dịch vụ' : 'Xem dịch vụ đã thuê'}
+                Xem dịch vụ đã thuê
               </button>
             )}
-            
             {isMyServices && (
               <Link
                 to="/services/create"

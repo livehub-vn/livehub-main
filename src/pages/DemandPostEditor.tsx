@@ -94,6 +94,9 @@ const DemandPostEditor: React.FC = () => {
   const [platformOptions] = useState<string[]>(['phone', 'email', 'facebook']);
   const [] = useState('');
 
+  // Thêm state cho lỗi giá
+  const [priceError, setPriceError] = useState<{min?: string, max?: string}>({});
+
   useEffect(() => {
     const checkAuth = async () => {
       if (!isAuthenticated) {
@@ -137,8 +140,6 @@ const DemandPostEditor: React.FC = () => {
         title: demandData.title,
         description: demandData.description,
         category: demandData.category,
-        subcategory: demandData.subcategory,
-        tags: demandData.tags || [],
         price_range: demandData.price_range || {
           min: 0,
           max: 0,
@@ -147,7 +148,6 @@ const DemandPostEditor: React.FC = () => {
         date_range: demandData.date_range || {
           days: []
         },
-        languages: demandData.languages || [],
         status: demandData.status,
         is_public: demandData.is_public !== undefined ? demandData.is_public : true,
         item_type: 'demand',
@@ -190,9 +190,21 @@ const DemandPostEditor: React.FC = () => {
         [name]: value
       });
     }
+
+    // Kiểm tra lỗi giá
+    if (name === 'price_range.min' || name === 'price_range.max') {
+      const min = Number(name === 'price_range.min' ? value : formData.price_range.min);
+      const max = Number(name === 'price_range.max' ? value : formData.price_range.max);
+      let err: {min?: string, max?: string} = {};
+      if (isNaN(min) || min < 0) err.min = 'Giá tối thiểu phải là số không âm';
+      if (isNaN(max) || max < 0) err.max = 'Giá tối đa phải là số không âm';
+      if (!err.min && !err.max && min > max) {
+        err.min = 'Giá tối thiểu không thể lớn hơn giá tối đa';
+        err.max = 'Giá tối đa không thể nhỏ hơn giá tối thiểu';
+      }
+      setPriceError(err);
+    }
   };
-
-
 
   // Thêm hàm xử lý ngày trong tuần tương tự ServicePostEditor
   const handleDayAdd = (selectedDay: string) => {
@@ -226,6 +238,9 @@ const DemandPostEditor: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    // Nếu có lỗi giá thì không submit
+    if (priceError.min || priceError.max) return;
     
     try {
       // Kiểm tra validation
@@ -667,25 +682,10 @@ const DemandPostEditor: React.FC = () => {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                     />
                   </div>
-
-                  <div>
-                    <label htmlFor="subcategory" className="block text-sm font-medium text-gray-700">
-                      Danh mục con
-                    </label>
-                    <input
-                      type="text"
-                      id="subcategory"
-                      name="subcategory"
-                      placeholder="Nhập danh mục con..."
-                      value={formData.subcategory || ''}
-                      onChange={handleInputChange}
-                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
-                    />
-                  </div>
                 </div>
               </div>
             </div>
-
+            
             {/* Ngân sách và thời gian */}
             <div className="bg-gray-50 p-6 rounded-lg">
               <h3 className="text-lg font-medium text-gray-900 mb-6">Ngân sách và thời gian</h3>
@@ -703,12 +703,13 @@ const DemandPostEditor: React.FC = () => {
                         value={formData.price_range.min || ''}
                         onChange={handleInputChange}
                         min="0"
-                        className="block w-full border border-gray-300 rounded-md pl-3 pr-12 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                        className={`block w-full border rounded-md pl-3 pr-12 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${priceError.min ? 'border-red-500' : 'border-gray-300'}`}
                       />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span className="text-gray-500 sm:text-sm">VND</span>
                       </div>
                     </div>
+                    {priceError.min && <p className="text-red-500 text-xs mt-1">{priceError.min}</p>}
                   </div>
 
                   <div>
@@ -724,12 +725,13 @@ const DemandPostEditor: React.FC = () => {
                         value={formData.price_range.max}
                         onChange={handleInputChange}
                         min="0"
-                        className="block w-full border border-gray-300 rounded-md pl-3 pr-12 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
+                        className={`block w-full border rounded-md pl-3 pr-12 py-2 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm ${priceError.max ? 'border-red-500' : 'border-gray-300'}`}
                       />
                       <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
                         <span className="text-gray-500 sm:text-sm">VND</span>
                       </div>
                     </div>
+                    {priceError.max && <p className="text-red-500 text-xs mt-1">{priceError.max}</p>}
                   </div>
                 </div>
 

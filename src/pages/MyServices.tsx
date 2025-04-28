@@ -48,8 +48,8 @@ const MyServices: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-20">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 py-20 pt-24">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <h2 className="text-3xl font-bold text-orange-600 text-center mb-8">Dịch vụ của bạn</h2>
         {loading ? (
           <div className="text-center text-lg">Đang tải...</div>
@@ -58,11 +58,18 @@ const MyServices: React.FC = () => {
         ) : services.length === 0 ? (
           <div className="bg-white rounded-lg shadow p-8 text-center text-gray-500">Bạn chưa đăng dịch vụ nào.</div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
             {services.map(service => (
               <div key={service.id} className="bg-white rounded-lg shadow p-6 flex flex-col">
+                {service.image_urls && service.image_urls.length > 0 && (
+                  <img
+                    src={service.image_urls[0]}
+                    alt={service.title}
+                    className="w-full max-h-40 object-cover rounded mb-3 border border-orange-100"
+                  />
+                )}
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-xl font-semibold text-gray-900">{service.title}</h3>
+                  <h3 className="text-xl font-semibold text-gray-900 line-clamp-1">{service.title}</h3>
                   <span className={`ml-2 px-3 py-1 rounded-full text-xs font-medium ${getStatusClass(service.status)}`}>{getStatusLabel(service.status)}</span>
                 </div>
                 <p className="text-gray-600 line-clamp-2 mb-2">{service.description}</p>
@@ -72,7 +79,6 @@ const MyServices: React.FC = () => {
                   </p>
                 )}
                 <div className="flex gap-2 mt-auto">
-                  <Link to={`/services/${service.id}`} className="px-4 py-2 bg-orange-600 text-white rounded hover:bg-orange-700 text-sm">Xem chi tiết</Link>
                   <Link to={`/services/${service.id}/edit`} className="px-4 py-2 border border-orange-600 text-orange-600 rounded hover:bg-orange-50 text-sm">Chỉnh sửa</Link>
                 </div>
               </div>

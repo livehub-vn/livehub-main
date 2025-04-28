@@ -38,10 +38,9 @@ export const getDemandApplicationById = async (id: string) => {
   try {
     const { data, error } = await supabase
       .from('demand_application')
-      .select('*')
+      .select(`*, demand:demand_id(id, title, owner_id)`)
       .eq('id', id)
       .single();
-    
     if (error) throw error;
     return data;
   } catch (error) {

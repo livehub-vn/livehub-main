@@ -68,6 +68,10 @@ const ServiceRentalForm: React.FC = () => {
 
   const [] = useState<string[]>([]);
 
+  // Thêm biến ngày hôm nay ở định dạng yyyy-MM-ddTHH:mm
+  const today = new Date();
+  const todayISO = today.toISOString().slice(0, 16);
+
   useEffect(() => {
     const checkAuth = async () => {
       if (!isAuthenticated) {
@@ -182,6 +186,15 @@ const ServiceRentalForm: React.FC = () => {
 
       if (!formData.selected_time_slots.start || !formData.selected_time_slots.end) {
         setError('Vui lòng chọn thời gian bắt đầu và kết thúc');
+        setSaving(false);
+        return;
+      }
+
+      // Kiểm tra ngày kết thúc phải sau ngày bắt đầu
+      const start = new Date(formData.selected_time_slots.start);
+      const end = new Date(formData.selected_time_slots.end);
+      if (end <= start) {
+        setError('Ngày kết thúc phải sau ngày bắt đầu');
         setSaving(false);
         return;
       }
@@ -354,6 +367,7 @@ const ServiceRentalForm: React.FC = () => {
                       onChange={handleTimeSlotChange}
                       className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                       required
+                      min={todayISO}
                     />
                   </div>
                   <div>
@@ -366,6 +380,7 @@ const ServiceRentalForm: React.FC = () => {
                       onChange={handleTimeSlotChange}
                       className="mt-1 block w-full border border-orange-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-orange-500 focus:border-orange-500 sm:text-sm"
                       required
+                      min={formData.selected_time_slots.start || todayISO}
                     />
                   </div>
                 </div>

@@ -231,7 +231,7 @@ const ServiceCreateForm: React.FC = () => {
           const result = await createService(serviceData);
           if (result?.id) {
             console.log('Service created successfully:', result);
-            navigate(`/services/${result.id}`);
+            navigate('/my-services');
           } else {
             setError('Không thể tạo dịch vụ. Phản hồi từ server không hợp lệ.');
           }
@@ -251,7 +251,7 @@ const ServiceCreateForm: React.FC = () => {
 
   const handleCancel = () => {
     if (isEditing && id) {
-      navigate(`/services/${id}`);
+      navigate(`/my-services`);
     } else {
       navigate('/services');
     }

@@ -22,7 +22,6 @@ export interface IDemand {
   attachments?: string[];
   location?: string;
   location_details?: string;
-  languages?: string[];
   status: string; // 'active', 'pending', 'draft', etc.
   need_support?: boolean;
   note?: string;
@@ -55,7 +54,6 @@ export interface IDemandInput {
   location?: string;
   location_details?: string;
   work_location?: string;
-  languages?: string[];
   status?: string; // 'active', 'pending', 'draft'
   need_support?: boolean;
   note?: string;

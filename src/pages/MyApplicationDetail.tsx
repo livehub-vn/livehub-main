@@ -45,7 +45,9 @@ const MyApplicationDetail: React.FC = () => {
       <div className="bg-white shadow-lg rounded-xl p-8 mb-8 border border-orange-100">
         <div className="mb-4 flex items-center justify-between">
           <span className="text-lg font-semibold text-gray-800">Tên nhu cầu:</span>
-          <span className="text-base text-gray-700 font-medium">{application.demand_title || application.demand_id}</span>
+          <span className="text-base text-gray-700 font-medium">
+            {application.demand_title || (application.demand && application.demand.title) || application.demand_id}
+          </span>
         </div>
         <div className="mb-4 flex items-center justify-between">
           <span className="text-lg font-semibold text-gray-800">Trạng thái:</span>

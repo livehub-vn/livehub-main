@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getDemands, IDemand, IDemandFilter } from '../services/demand.service';
 import { useAuthStore } from '../stores/authStore';
@@ -16,6 +16,17 @@ const Demands: React.FC = () => {
   // Các state cho bộ lọc
   const [filter, setFilter] = useState<IDemandFilter>({ is_public: true, status: 'approved' });
   const [searchTerm, setSearchTerm] = useState('');
+
+  const searchTimeout = useRef<NodeJS.Timeout | null>(null);
+
+  useEffect(() => {
+    if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    searchTimeout.current = setTimeout(() => {
+      setPage(1);
+      loadDemands();
+    }, 400);
+    // eslint-disable-next-line
+  }, [searchTerm]);
 
   useEffect(() => {
     loadDemands();
@@ -49,7 +60,6 @@ const Demands: React.FC = () => {
     }
   };
 
-
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     console.log('Tìm kiếm với từ khóa:', searchTerm);
@@ -75,7 +85,7 @@ const Demands: React.FC = () => {
 
         {/* Bộ lọc và tìm kiếm - đã đơn giản hóa */}
         <div className="bg-white rounded-lg shadow-md p-6 mb-8">
-          <form onSubmit={handleSearchSubmit} className="flex justify-center">
+          <form onSubmit={e => e.preventDefault()} className="flex justify-center">
             <div className="relative w-full max-w-xl">
               <input
                 type="text"
@@ -85,15 +95,11 @@ const Demands: React.FC = () => {
                 placeholder="Tìm kiếm nhu cầu..."
                 className="block w-full rounded-full border border-gray-300 shadow-sm py-4 px-6 pr-12 text-lg focus:border-orange-500 focus:ring-2 focus:ring-orange-200 transition-all"
               />
-              <button
-                type="submit"
-                className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400 hover:text-orange-500"
-                tabIndex={-1}
-              >
+              <span className="absolute inset-y-0 right-0 flex items-center px-4 text-gray-400">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
                 </svg>
-              </button>
+              </span>
             </div>
           </form>
         </div>
