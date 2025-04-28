@@ -333,7 +333,7 @@ const DemandPostEditor: React.FC = () => {
     if (isEditing && id) {
       navigate(`/demands/${id}`);
     } else {
-      navigate('/demands');
+      navigate('/services');
     }
   };
 
