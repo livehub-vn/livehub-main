@@ -24,6 +24,7 @@ import Demands from './pages/Demands';
 import MyRentedServices from './pages/MyRentedServices';
 import MyApplications from './pages/MyApplications';
 import MyApplicationDetail from './pages/MyApplicationDetail';
+import MyServices from './pages/MyServices';
 
 const App: React.FC = () => {
   return (
@@ -56,6 +57,7 @@ const App: React.FC = () => {
             <Route path="/my-rented-services" element={<MyRentedServices />} />
             <Route path="/my-applications" element={<MyApplications />} />
             <Route path="/my-applications/:id" element={<MyApplicationDetail />} />
+            <Route path="/my-services" element={<MyServices />} />
           </Routes>
         </main>
         <Footer />

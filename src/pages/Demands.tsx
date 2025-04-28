@@ -4,7 +4,7 @@ import { getDemands, IDemand, IDemandFilter } from '../services/demand.service';
 import { useAuthStore } from '../stores/authStore';
 
 const Demands: React.FC = () => {
-  const { isAuthenticated } = useAuthStore();
+  useAuthStore();
   const [demands, setDemands] = useState<IDemand[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -71,15 +71,6 @@ const Demands: React.FC = () => {
             <h1 className="text-3xl font-bold text-gray-900">Danh sách nhu cầu</h1>
             <p className="mt-2 text-gray-600">Tìm kiếm các nhu cầu từ khách hàng</p>
           </div>
-          
-          {isAuthenticated && (
-            <Link
-              to="/demands/new"
-              className="mt-4 md:mt-0 px-4 py-2 bg-[#FF9800] text-white rounded-md hover:bg-[#FFA726] focus:outline-none focus:ring-2 focus:ring-[#FF9800]"
-            >
-              Đăng nhu cầu mới
-            </Link>
-          )}
         </div>
 
         {/* Bộ lọc và tìm kiếm - đã đơn giản hóa */}

@@ -220,7 +220,7 @@ export const changeServiceRentalStatus = async (id: string, status: 'pending' | 
  */
 export const cancelServiceRental = async (id: string, reason?: string) => {
   const { data, error } = await supabase.from('service_rental')
-    .update({ status: 'canceled', note: reason })
+    .update({ status: 'rejected', note: reason })
     .eq('id', id)
     .select();
   

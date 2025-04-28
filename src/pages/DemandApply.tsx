@@ -193,12 +193,12 @@ const DemandApply: React.FC = () => {
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="bg-white shadow-lg rounded-lg overflow-hidden">
           {/* Header */}
-          <div className="bg-orange-600 px-6 py-4">
+          <div className="bg-orange-600 px-6 py-4 mt-6 rounded-t-lg">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-xl font-semibold text-white">Đăng ký nhu cầu</h2>
+                <h2 className="text-xl font-semibold text-white">Đăng ký ứng tuyển</h2>
                 <p className="mt-1 text-orange-100">
-                  Bạn đang đăng ký nhu cầu: <span className="font-medium">{demand.title}</span>
+                  Bạn đang đăng ký ứng tuyển: <span className="font-medium">{demand.title}</span>
                 </p>
               </div>
               <button

@@ -167,7 +167,7 @@ const Navbar = () => {
                   onMouseLeave={handleProfileMouseLeave}
                   className="flex items-center text-gray-600 hover:text-blue-500 px-3 py-2 text-sm font-medium"
                 >
-                  <span className="mr-1">{user?.metadata.fullName || 'Người dùng'}</span>
+                  <span className="mr-1">{user?.metadata?.fullName || 'Người dùng'}</span>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
                   </svg>
@@ -201,12 +201,20 @@ const Navbar = () => {
                       </Link>
                     )}
                     {user?.metadata.role === AccountRole.SUPPLIER && (
-                      <Link
-                        to="/my-applications"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        Các đơn ứng tuyển
-                      </Link>
+                      <>
+                        <Link
+                          to="/my-applications"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Các đơn ứng tuyển
+                        </Link>
+                        <Link
+                          to="/my-services"
+                          className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        >
+                          Dịch vụ của bạn
+                        </Link>
+                      </>
                     )}
                     <button
                       onClick={handleLogout}

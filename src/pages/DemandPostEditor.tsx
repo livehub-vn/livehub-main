@@ -295,7 +295,8 @@ const DemandPostEditor: React.FC = () => {
           // Tạo nhu cầu mới
           const result = await createDemand(demandData);
           if (result?.id) {
-            navigate(`/demands/${result.id}`);
+            console.log('Demand created successfully:', result);
+            navigate('/my-demands'); // Chuyển về trang Nhu cầu của tôi
           } else {
             setError('Không thể tạo nhu cầu. Phản hồi từ server không hợp lệ.');
           }

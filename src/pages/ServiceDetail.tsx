@@ -282,13 +282,6 @@ const ServiceDetail = () => {
                         >
                            Thuê dịch vụ
                         </Link>
-                        <button
-                          type="button"
-                          onClick={() => setShowModal(true)}
-                          className="w-full inline-flex justify-center items-center px-6 py-3 border border-orange-600 rounded-md shadow-sm text-base font-medium text-orange-600 bg-white hover:bg-orange-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-                        >
-                          Đăng ký ứng tuyển
-                        </button>
                       </div>
                     ) : (
                       <div className="space-y-4">

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
-import { getDemandById, changeDemandStatus, IDemand } from '../services/demand.service';
+import { getDemandById, IDemand } from '../services/demand.service';
 import { format } from 'date-fns';
 import { vi } from 'date-fns/locale';
 import ReactMarkdown from 'react-markdown';
@@ -15,7 +15,7 @@ const DemandDetail: React.FC = () => {
   const [demand, setDemand] = useState<IDemand | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [changingStatus, setChangingStatus] = useState(false);
+  const [] = useState(false);
   const [applicantsCount, setApplicantsCount] = useState(0);
   const [showModal, setShowModal] = useState(false);
 
@@ -43,21 +43,6 @@ const DemandDetail: React.FC = () => {
     }
   };
 
-  const handleStatusChange = async (newStatus: 'open' | 'closed' | 'awarded' | 'completed') => {
-    if (!id || !demand) return;
-
-    try {
-      setChangingStatus(true);
-      await changeDemandStatus(id, newStatus);
-      // Cập nhật lại thông tin demand
-      await loadDemandData();
-      setChangingStatus(false);
-    } catch (err) {
-      console.error('Error changing demand status:', err);
-      setError('Đã xảy ra lỗi khi thay đổi trạng thái. Vui lòng thử lại sau.');
-      setChangingStatus(false);
-    }
-  };
 
   const isOwner = user && demand && user.id === demand.owner_id;
 
@@ -140,7 +125,7 @@ const DemandDetail: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-gray-50 py-8 pt-16">
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
         <button
           onClick={() => navigate('/demands')}
           className="mb-4 px-4 py-2 bg-orange-600 text-white rounded-md hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
@@ -163,77 +148,41 @@ const DemandDetail: React.FC = () => {
           </div>
         </div>
       )}
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          {/* Header */}
-          <div className="bg-gray-50 px-6 py-4 border-b border-gray-200">
-            <div className="flex flex-wrap items-center justify-between">
-              <div className="flex-1 min-w-0">
-                <h1 className="text-2xl font-bold text-gray-900 truncate">{demand.title}</h1>
-                <div className="mt-1 flex flex-wrap items-center text-sm text-gray-500">
-                  <span className="mr-3">
-                    Đăng ngày: {format(new Date(demand.created_at), 'dd/MM/yyyy', { locale: vi })}
-                  </span>
-                  <span className="mr-3">
-                    Danh mục: {demand.category}
-                    {demand.subcategory && ` / ${demand.subcategory}`}
-                  </span>
-                  <span className="mr-3">
-                    Lượt ứng tuyển: {applicantsCount}
-                  </span>
-                </div>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow-md overflow-hidden p-6 flex flex-col md:flex-row gap-8">
+          {/* Ảnh lớn bên trái */}
+          <div className="md:w-1/2 flex flex-col items-center justify-start">
+            {demand.image_urls && demand.image_urls.length > 0 ? (
+              <img
+                src={demand.image_urls[0]}
+                alt="Ảnh chính"
+                className="w-[400px] h-[400px] object-cover rounded-lg border border-gray-200 shadow mb-4"
+              />
+            ) : (
+              <div className="w-[400px] h-[400px] bg-gray-100 flex items-center justify-center rounded-lg border mb-4 text-gray-400">Không có ảnh</div>
+            )}
+            {/* Gallery nhỏ */}
+            {demand.image_urls && demand.image_urls.length > 1 && (
+              <div className="flex gap-2 mt-2">
+                {demand.image_urls.slice(1, 5).map((url, idx) => (
+                  <img
+                    key={idx}
+                    src={url}
+                    alt={`Ảnh phụ ${idx + 2}`}
+                    className="w-20 h-20 object-cover rounded border cursor-pointer hover:ring-2 hover:ring-orange-500"
+                    onClick={() => window.open(url, '_blank')}
+                  />
+                ))}
               </div>
-
-              <div className="flex mt-4 md:mt-0 space-x-3">
-                {isAuthenticated && !isOwner && demand.status === 'open' && (
-                  <Link
-                    to={`/demands/${id}/apply`}
-                    className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                  >
-                    Ứng tuyển
-                  </Link>
-                )}
-
-                {isOwner && (
-                  <>
-                    <Link
-                      to={`/demands/${id}/edit`}
-                      className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-                    >
-                      Chỉnh sửa
-                    </Link>
-                    
-                    {demand.status === 'draft' && (
-                      <button
-                        onClick={() => handleStatusChange('open')}
-                        disabled={changingStatus}
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
-                      >
-                        {changingStatus ? 'Đang xử lý...' : 'Công khai nhu cầu'}
-                      </button>
-                    )}
-                    
-                    {demand.status === 'open' && (
-                      <button
-                        onClick={() => handleStatusChange('closed')}
-                        disabled={changingStatus}
-                        className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-red-600 hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-red-500"
-                      >
-                        {changingStatus ? 'Đang xử lý...' : 'Đóng nhu cầu'}
-                      </button>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
-
-            <div className="mt-3 flex flex-wrap gap-2">
-              {demand.tags && demand.tags.map((tag, index) => (
-                <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                  {tag}
-                </span>
-              ))}
-
+            )}
+          </div>
+          {/* Thông tin chính bên phải */}
+          <div className="md:w-1/2 flex flex-col gap-4">
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">{demand.title}</h1>
+            <div className="flex items-center gap-3 mb-2">
+              <span className="text-lg font-bold text-orange-600">
+                {demand.price_range.min?.toLocaleString()} - {demand.price_range.max?.toLocaleString()} {demand.price_range.currency}
+              </span>
               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
                 demand.status === 'open' ? 'bg-green-100 text-green-800' :
                 demand.status === 'closed' ? 'bg-red-100 text-red-800' :
@@ -248,126 +197,115 @@ const DemandDetail: React.FC = () => {
                  'Hoàn thành'}
               </span>
             </div>
-          </div>
-
-          {/* Thông tin chi tiết */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 p-6">
-            <div className="md:col-span-2">
-              <div className="mb-8">
-                <h2 className="text-lg font-medium text-gray-900 mb-4">Mô tả chi tiết</h2>
-                <div className="prose max-w-none">
-                  <ReactMarkdown
-                    remarkPlugins={[remarkGfm]}
-                    rehypePlugins={[rehypeRaw]}
-                  >
-                    {demand.description}
-                  </ReactMarkdown>
-                </div>
+            <div className="flex flex-wrap gap-2 mb-2">
+              {demand.tags && demand.tags.map((tag, index) => (
+                <span key={index} className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                  {tag}
+                </span>
+              ))}
+            </div>
+            <div className="text-sm text-gray-500 mb-2">
+              <span className="mr-3">Đăng ngày: {format(new Date(demand.created_at), 'dd/MM/yyyy', { locale: vi })}</span>
+              <span className="mr-3">Danh mục: {demand.category}{demand.subcategory && ` / ${demand.subcategory}`}</span>
+              <span className="mr-3">Lượt ứng tuyển: {applicantsCount}</span>
+            </div>
+            {/* Ưu đãi/ghi chú nếu có */}
+            {demand.note && (
+              <div className="bg-yellow-50 border-l-4 border-yellow-400 p-3 text-yellow-800 text-sm rounded mb-2">
+                <span className="font-semibold">Ghi chú:</span> {demand.note}
               </div>
-
-              {demand.attachments && demand.attachments.length > 0 && (
-                <div className="mb-8">
-                  <h2 className="text-lg font-medium text-gray-900 mb-4">Tệp đính kèm</h2>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {demand.attachments.map((url, index) => (
-                      <a 
-                        key={index} 
-                        href={url} 
-                        target="_blank" 
-                        rel="noreferrer"
-                        className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
-                      >
-                        <div className="flex flex-col items-center">
-                          <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                          </svg>
-                          <span className="mt-2 text-sm text-gray-500 truncate w-full text-center">Tệp {index + 1}</span>
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-                </div>
+            )}
+            {/* Nút hành động */}
+            <div className="flex gap-3 mt-2">
+              {isOwner && (
+                <Link
+                  to={`/demands/${id}/edit`}
+                  className="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                >
+                  Chỉnh sửa
+                </Link>
+              )}
+              {!isOwner && isAuthenticated && user?.metadata?.role === 'BUYER' && demand.status === 'open' && (
+                <Link
+                  to={`/service-rentals/create?demandId=${id}`}
+                  className="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                >
+                  Thuê dịch vụ
+                </Link>
               )}
             </div>
-
-            <div className="md:col-span-1">
-              <div className="bg-gray-50 p-5 rounded-lg border border-gray-200 divide-y divide-gray-200">
-                <div className="pb-4">
-                  <h3 className="text-base font-medium text-gray-900 mb-2">Ngân sách</h3>
-                  <div className="text-lg font-bold text-gray-900">
-                    {demand.price_range.min && `${demand.price_range.min.toLocaleString()} - `}
-                    {demand.price_range.max.toLocaleString()} {demand.price_range.currency}
-                  </div>
-                </div>
-
-                <div className="py-4">
-                  <h3 className="text-base font-medium text-gray-900 mb-2">Thời gian</h3>
-                  {demand.date_range?.start && (
-                    <div className="text-sm text-gray-700 mb-1">
-                      <span className="font-medium">Ngày bắt đầu:</span> {format(new Date(demand.date_range.start), 'dd/MM/yyyy', { locale: vi })}
-                    </div>
-                  )}
-                  {demand.date_range?.end && (
-                    <div className="text-sm text-gray-700 mb-1">
-                      <span className="font-medium">Ngày kết thúc:</span> {format(new Date(demand.date_range.end), 'dd/MM/yyyy', { locale: vi })}
-                    </div>
-                  )}
-                  {demand.date_range?.days && demand.date_range.days.length > 0 && (
-                    <div className="text-sm text-gray-700">
-                      <span className="font-medium">Ngày làm việc:</span> {demand.date_range.days.map(day => {
-                        if (day === 'mon') return 'Thứ 2';
-                        if (day === 'tue') return 'Thứ 3';
-                        if (day === 'wed') return 'Thứ 4';
-                        if (day === 'thu') return 'Thứ 5';
-                        if (day === 'fri') return 'Thứ 6';
-                        if (day === 'sat') return 'Thứ 7';
-                        if (day === 'sun') return 'Chủ Nhật';
-                        return day;
-                      }).join(', ')}
-                    </div>
-                  )}
-                </div>
-
-                <div className="py-4">
-                  <h3 className="text-base font-medium text-gray-900 mb-2">Thông tin chung</h3>
-                  <div className="text-sm text-gray-700 mb-1">
-                    <span className="font-medium">Địa điểm làm việc:</span>{' '}
-                    {demand.location === 'remote' ? 'Từ xa' : 
-                    demand.location === 'onsite' ? 'Tại văn phòng' : 'Kết hợp'}
-                  </div>
-                  {demand.location_details && (
-                    <div className="text-sm text-gray-700">
-                      <span className="font-medium">Chi tiết địa điểm:</span> {demand.location_details}
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-4">
-                  <h3 className="text-base font-medium text-gray-900 mb-2">Thống kê</h3>
-                  <div className="text-sm text-gray-700 mb-1">
-                    <span className="font-medium">Đăng ngày:</span> {format(new Date(demand.created_at), 'dd/MM/yyyy', { locale: vi })}
-                  </div>
-                  <div className="text-sm text-gray-700 mb-1">
-                    <span className="font-medium">Cập nhật:</span> {format(new Date(demand.updated_at), 'dd/MM/yyyy', { locale: vi })}
-                  </div>
-                  <div className="text-sm text-gray-700">
-                    <span className="font-medium">ID:</span> {demand.id}
-                  </div>
-                </div>
-              </div>
-
-              {isAuthenticated && user?.metadata.role === 'SUPPLIER' && demand.status === 'approved' && (
-                <div className="mt-6">
-                  <button
-                    className="w-full px-6 py-3 bg-orange-600 text-white rounded-md font-medium hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-orange-500"
-                    onClick={() => navigate(`/demands/${id}/apply`)}
-                  >
-                    Đăng ký ứng tuyển
-                  </button>
-                </div>
+            {/* Thông tin thời gian, địa điểm */}
+            <div className="mt-4 text-sm text-gray-700">
+              {demand.date_range?.start && (
+                <div><span className="font-medium">Ngày bắt đầu:</span> {format(new Date(demand.date_range.start), 'dd/MM/yyyy', { locale: vi })}</div>
               )}
+              {demand.date_range?.end && (
+                <div><span className="font-medium">Ngày kết thúc:</span> {format(new Date(demand.date_range.end), 'dd/MM/yyyy', { locale: vi })}</div>
+              )}
+              {demand.date_range?.days && demand.date_range.days.length > 0 && (
+                <div><span className="font-medium">Ngày làm việc:</span> {demand.date_range.days.map(day => {
+                  if (day === 'mon') return 'Thứ 2';
+                  if (day === 'tue') return 'Thứ 3';
+                  if (day === 'wed') return 'Thứ 4';
+                  if (day === 'thu') return 'Thứ 5';
+                  if (day === 'fri') return 'Thứ 6';
+                  if (day === 'sat') return 'Thứ 7';
+                  if (day === 'sun') return 'Chủ Nhật';
+                  return day;
+                }).join(', ')}</div>
+              )}
+              <div><span className="font-medium">Địa điểm làm việc:</span> {demand.location === 'remote' ? 'Từ xa' : demand.location === 'onsite' ? 'Tại văn phòng' : 'Kết hợp'}</div>
+              {demand.location_details && (
+                <div><span className="font-medium">Chi tiết địa điểm:</span> {demand.location_details}</div>
+              )}
+            {/* Nút đăng ký ứng tuyển luôn hiển thị cho supplier (không phải owner, đã đăng nhập) */}
+            {!isOwner && isAuthenticated && user?.metadata?.role === 'SUPPLIER' && (
+              <div className="flex justify-end mt-6">
+                <Link
+                  to={`/demands/${id}/apply`}
+                  className="px-6 py-3 border border-transparent rounded-md shadow-sm text-base font-medium text-white bg-orange-500 hover:bg-orange-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-400"
+                >
+                  Đăng ký ứng tuyển
+                </Link>
+              </div>
+            )}
             </div>
           </div>
+        </div>
+        {/* Mô tả và file đính kèm bên dưới */}
+        <div className="bg-white rounded-lg shadow-md overflow-hidden mt-8 p-6">
+          <h2 className="text-lg font-medium text-gray-900 mb-4">Mô tả chi tiết</h2>
+          <div className="prose max-w-none mb-8">
+            <ReactMarkdown
+              remarkPlugins={[remarkGfm]}
+              rehypePlugins={[rehypeRaw]}
+            >
+              {demand.description}
+            </ReactMarkdown>
+          </div>
+          {demand.attachments && demand.attachments.length > 0 && (
+            <div className="mb-8">
+              <h2 className="text-lg font-medium text-gray-900 mb-4">Tệp đính kèm</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+                {demand.attachments.map((url, index) => (
+                  <a 
+                    key={index} 
+                    href={url} 
+                    target="_blank" 
+                    rel="noreferrer"
+                    className="block p-3 border border-gray-200 rounded-lg hover:bg-gray-50"
+                  >
+                    <div className="flex flex-col items-center">
+                      <svg className="h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                      </svg>
+                      <span className="mt-2 text-sm text-gray-500 truncate w-full text-center">Tệp {index + 1}</span>
+                    </div>
+                  </a>
+                ))}
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

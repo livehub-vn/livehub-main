@@ -113,7 +113,7 @@ const Services = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="text-center">
           <h2 className="text-3xl font-extrabold text-gray-900 sm:text-4xl">
-            {isMyServices ? 'Dịch vụ của tôi' : 'Tìm dịch vụ'}
+            {isMyServices ? 'Dịch vụ của tôi' : 'Danh sách dịch vụ'}
           </h2>
           <p className="mt-3 max-w-2xl mx-auto text-xl text-gray-500 sm:mt-4">
             {isMyServices 
@@ -145,17 +145,25 @@ const Services = () => {
           <div className="mt-8 flex justify-center gap-4">
             {user && (
               <button
-                onClick={toggleMyServices}
-                className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                onClick={() => {
+                  if (!isMyServices) {
+                    // Nếu đang ở chế độ xem tất cả, chuyển sang xem dịch vụ đã thuê
+                    toggleMyServices();
+                  } else {
+                    // Nếu đang ở chế độ xem dịch vụ đã thuê, chuyển hướng sang /service-rentals
+                    window.location.href = '/service-rentals';
+                  }
+                }}
+                className="inline-flex items-center px-6 py-3 border border-gray-300 shadow-sm text-base font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
-                {isMyServices ? 'Xem tất cả dịch vụ' : 'Xem dịch vụ của tôi'}
+                {isMyServices ? 'Xem tất cả dịch vụ' : 'Xem dịch vụ đã thuê'}
               </button>
             )}
             
             {isMyServices && (
               <Link
                 to="/services/create"
-                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                className="inline-flex items-center px-6 py-3 border border-transparent text-base font-medium rounded-md shadow-sm text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
               >
                 Thêm dịch vụ mới
               </Link>

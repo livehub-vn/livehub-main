@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { useAuthStore } from '../stores/authStore';
 
 const Hero = () => {
-  const { isAuthenticated } = useAuthStore();
+  const { isAuthenticated, user } = useAuthStore();
   return (
     <div className="bg-[#F8F6EC] pt-20">
       <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between">
@@ -24,10 +24,10 @@ const Hero = () => {
               </Link>
             )}
             <Link
-              to="/services"
+              to={user?.metadata?.role === 'SUPPLIER' ? '/demands' : '/services'}
               className="border border-gray-300 hover:border-orange-500 text-gray-700 hover:text-orange-500 px-6 py-3 rounded-md font-medium text-center"
             >
-              Xem dịch vụ
+              {user?.metadata?.role === 'SUPPLIER' ? 'Xem nhu cầu' : 'Xem dịch vụ'}
             </Link>
           </div>
         </div>
